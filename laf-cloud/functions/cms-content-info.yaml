@@ -1,0 +1,6 @@
+name: cms-content-info
+methods:
+  - GET
+  - POST
+tags:
+  - cms

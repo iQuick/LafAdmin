@@ -1,0 +1,6 @@
+name: cms-content-delete
+methods:
+  - GET
+  - POST
+tags:
+  - cms

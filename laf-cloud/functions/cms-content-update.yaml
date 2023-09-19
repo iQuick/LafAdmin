@@ -1,0 +1,6 @@
+name: cms-content-update
+methods:
+  - GET
+  - POST
+tags:
+  - cms
