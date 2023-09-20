@@ -28,7 +28,7 @@ const uploadFile = async (file: File) => {
     forcePathStyle: true,
   });
 
-  const key = `${nanoid(6)}_${file.name}`;
+  const key = `resource/admin/${nanoid(6)}_${file.name}`;
   const cmd = new PutObjectCommand({
     Bucket: bucket,
     Key: key,
