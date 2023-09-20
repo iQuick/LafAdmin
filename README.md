@@ -54,7 +54,7 @@ pnpm build
 **初始化项目**
 1. 在 laf-cloud 目录下初始化 laf app
 2. 发布所有 function 到 laf 线上
-3. 在线上执行 init-shared-utils 和 init-app-rbac 两个 function，初始化 rbac 相关数据
+3. 在线上执行 `init-shared-utils` 和 `init-app-rbac` 两个 function，初始化 rbac 相关数据
 
 **静态资源发布**
 ```bash
@@ -67,6 +67,16 @@ pnpm build
 laf storage push bucketName ../dist
 ```
 
+**创建资源文件存储桶**
+```bash
+laf storage craete public
+```
+
+在laf 上添加环境变量
+```bash
+OSS_POINT="https://xxxx.xxx"
+OSS_REGION="xxxx"
+```
 
 ## 如何贡献
 
