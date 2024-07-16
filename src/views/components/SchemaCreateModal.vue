@@ -1,7 +1,8 @@
 <script setup lang="ts">
   import { useMessage } from 'naive-ui';
   import { reactive, ref, toRefs, watch } from 'vue';
-  import { createSchema, updateSchema, createSchemaApi } from '@/api/cms/schema';
+  import { createSchema, updateSchema } from '@/api/cms/schema';
+  import { createSchemaApi } from '@/api/cms/schema-api';
 
   const props = defineProps<{
     modelValue: boolean;

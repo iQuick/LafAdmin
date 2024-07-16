@@ -1,0 +1,6 @@
+name: system/types
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

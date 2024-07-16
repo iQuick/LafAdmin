@@ -1,5 +1,0 @@
-name: setting-get-info
-methods:
-  - GET
-  - POST
-tags: []

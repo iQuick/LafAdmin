@@ -131,8 +131,8 @@
     deleteUser,
     updateUser,
     resetPasswordUser,
-  } from '@/api/user/user';
-  import { getAllRoles } from '@/api/system/role';
+  } from '@/api/cms/user';
+  import { getAllRoles } from '@/api/cms/role';
   import { uploadFile } from '@/api/cloud';
   import { columns } from './columns';
   import { PlusOutlined } from '@vicons/antd';

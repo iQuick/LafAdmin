@@ -1,0 +1,6 @@
+name: cms/schema/all
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

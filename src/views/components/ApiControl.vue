@@ -49,15 +49,29 @@
     emit('collapseApiItem', key, value);
   };
   const handleCopyText = (txt: string) => {
-    navigator.clipboard
-      .writeText(txt)
-      .then(function () {
+    if (navigator.clipboard) {
+      navigator.clipboard
+        .writeText(txt)
+        .then(function () {
+          message.info('已经复制');
+        })
+        .catch(function (err) {
+          logger.error(err);
+          message.info('复制失败');
+        });
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = txt;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
         message.info('已经复制');
-      })
-      .catch(function (err) {
-        logger.error(err);
+      } catch (err) {
         message.info('复制失败');
-      });
+      }
+      document.body.removeChild(textarea);
+    }
   };
 </script>
 
@@ -92,27 +106,29 @@
                 :disabled="!enable"
                 size="small"
                 :round="false"
-                @update:value="handleApiItemEnable(key, !api.enable)"
+                @update:value="handleApiItemEnable(key.toString(), !api.enable)"
               />
             </div>
           </div>
           <div class="item-tag">
-            <p
-              ><space class="item-tag-point">Url：</space
-              ><n-tag @click="handleCopyText(API_URL + api.url)" type="info"
-                >{{ API_URL }}{{ api.url }}</n-tag
-              ></p
-            >
+            <p>
+              <space class="item-tag-point">Url： </space>
+              <n-tag @click="handleCopyText(API_URL + api.url)" type="info"
+                >{{ API_URL }}{{ api.url }}
+              </n-tag>
+            </p>
           </div>
 
           <div class="item-tag">
-            <p><space class="item-tag-point">验证Token：</space></p>
+            <p>
+              <space class="item-tag-point">验证Token：</space>
+            </p>
             <n-tooltip v-if="currentApi" placement="top">
               <template #trigger>
                 <n-checkbox
                   :disabled="!enable || !api.tokenEdit"
                   :checked="api.token"
-                  @update:checked="handleApiItemToken(key, !api.token)"
+                  @update:checked="handleApiItemToken(key.toString(), !api.token)"
                 />
               </template>
               <span>验证Token</span>
@@ -120,35 +136,34 @@
           </div>
           <div v-show="api.collapse">
             <div class="item-tag">
-              <p
-                ><space class="item-tag-point">Method：</space><space>{{ api.method }}</space></p
-              >
+              <p>
+                <space class="item-tag-point">Method：</space>
+                <space>{{ api.method }}</space>
+              </p>
             </div>
 
-            <div v-if="hasKey(api.headers)" class="item-tag" style="justify-content: start"
-              ><space class="item-tag-point">Headers：</space
-              ><div class="item-tag-params"
-                ><space v-for="(value, key) in api.headers" :key="key"
-                  >{{ key }} ： {{ value }}</space
-                ></div
-              >
+            <div v-if="hasKey(api.headers)" class="item-tag" style="justify-content: start">
+              <space class="item-tag-point">Headers： </space>
+              <div class="item-tag-params">
+                <space v-for="(value, key) in api.headers" :key="key"
+                  >{{ key }} ： {{ value }}
+                </space>
+              </div>
             </div>
-            <div v-if="hasKey(api.params)" class="item-tag" style="justify-content: start"
-              ><space class="item-tag-point">Params：</space
-              ><div class="item-tag-params"
-                ><space v-for="(value, key) in api.params" :key="key"
-                  >{{ key }} ： {{ value }}</space
-                ></div
-              >
+            <div v-if="hasKey(api.params)" class="item-tag" style="justify-content: start">
+              <space class="item-tag-point">Params： </space>
+              <div class="item-tag-params">
+                <space v-for="(value, key) in api.params" :key="key"
+                  >{{ key }} ： {{ value }}
+                </space>
+              </div>
             </div>
 
-            <div v-show="hasKey(api.body)" class="item-tag" style="justify-content: start"
-              ><space class="item-tag-point">Body：</space
-              ><div class="item-tag-params"
-                ><space v-for="(value, key) in api.body" :key="key"
-                  >{{ key }} ： {{ value }}</space
-                ></div
-              >
+            <div v-show="hasKey(api.body)" class="item-tag" style="justify-content: start">
+              <space class="item-tag-point">Body： </space>
+              <div class="item-tag-params">
+                <space v-for="(value, key) in api.body" :key="key">{{ key }} ： {{ value }} </space>
+              </div>
             </div>
           </div>
           <div class="item-bottom">
@@ -156,7 +171,7 @@
               type="primary"
               class="mr-2"
               text
-              @click="handleApiItemCollapse(key, !api.collapse)"
+              @click="handleApiItemCollapse(key.toString(), !api.collapse)"
               >{{ api.collapse ? '收起' : '展开' }}
             </n-button>
           </div>
@@ -173,6 +188,7 @@
   .n-card__content {
     padding: 0;
   }
+
   .schema-api-box {
     width: 800px;
     border: none;
@@ -191,6 +207,7 @@
         flex-direction: row;
         justify-content: space-between;
       }
+
       .item-bottom {
         font-size: 12px;
         display: flex;
@@ -213,6 +230,7 @@
         display: inline-block;
         width: 80px;
       }
+
       .item-tag-params {
         display: flex;
         flex-direction: column;

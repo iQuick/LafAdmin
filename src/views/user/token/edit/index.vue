@@ -212,7 +212,7 @@
 
 <style lang="less" scoped>
   .BasicForm {
-    width: 700px;
+    width: 1200px;
     margin: 0 auto;
     overflow: hidden;
     padding-top: 20px;

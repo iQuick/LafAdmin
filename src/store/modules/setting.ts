@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { store } from '@/store';
-import { getSetting, updateSetting } from '@/api/setting/system';
+import { getSetting, updateSetting } from '@/api/cms/system';
 import { logger } from '@/utils/Logger';
 
 export const useSystemSettingStore = defineStore('app-system-setting', {

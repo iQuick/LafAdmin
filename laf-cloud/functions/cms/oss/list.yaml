@@ -1,0 +1,6 @@
+name: cms/oss/list
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

@@ -153,13 +153,16 @@
 
           <!--RichText-->
           <template v-else-if="schema.component === 'NRichText'">
-            <Editor
-              api-key="1ajuy5y0t0v2gw1x92nvkisgws4x5xqcbc9ql00zs1culc1t"
-              v-model="formModel[schema.field]"
-              :init="{
-                plugins: 'lists link image table code help wordcount',
-              }"
-            />
+            <div style="border: 1px solid #ccc" :style="editorStyle">
+              <Toolbar :editor="editorRef" :defaultConfig="toolbarConfig" :mode="editorMode" />
+              <Editor
+                style="height: 500px; overflow-y: hidden"
+                v-model="formModel[schema.field]"
+                :defaultConfig="editorConfig"
+                :mode="editorMode"
+                @onCreated="handleEditorCreated"
+              />
+            </div>
           </template>
 
           <!--Markdown-->
@@ -235,7 +238,19 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, reactive, ref, computed, unref, onMounted, watch } from 'vue';
+  import '@wangeditor/editor/dist/css/style.css'; // 引入 css
+
+  import {
+    defineComponent,
+    reactive,
+    ref,
+    computed,
+    unref,
+    onMounted,
+    onBeforeUnmount,
+    watch,
+    shallowRef,
+  } from 'vue';
   import { createPlaceholderMessage } from './helper';
   import { useFormEvents } from './hooks/useFormEvents';
   import { useFormValues } from './hooks/useFormValues';
@@ -246,7 +261,6 @@
   import type { Ref } from 'vue';
   import type { GridProps } from 'naive-ui/lib/grid';
   import type { FormSchema, FormProps, FormActionType } from './types/form';
-  import Editor from '@tinymce/tinymce-vue';
   import { ArchiveOutline as ArchiveIcon } from '@vicons/ionicons5';
 
   import { isArray } from '@/utils/is/index';
@@ -254,10 +268,11 @@
   import { uploadFile } from '@/api/cloud';
   import { UploadCustomRequestOptions } from 'naive-ui';
   import { Recordable } from 'vite-plugin-mock';
+  import { Toolbar, Editor } from '@wangeditor/editor-for-vue';
 
   export default defineComponent({
-    name: 'BasicUpload',
-    components: { DownOutlined, UpOutlined, QuestionCircleOutlined, Editor, ArchiveIcon },
+    name: 'BasicForm',
+    components: { DownOutlined, UpOutlined, QuestionCircleOutlined, Toolbar, Editor, ArchiveIcon },
     props: {
       ...basicProps,
     },
@@ -272,6 +287,27 @@
       const loadingSub = ref(false);
       const isUpdateDefaultRef = ref(false);
 
+      // 编辑器实例，必须用 shallowRef
+      const editorRef = shallowRef();
+      const editorMode = 'default';
+      const editorStyle = ref('');
+      const toolbarConfig = {};
+      const editorConfig = { placeholder: '请输入内容...', MENU_CONF: {} };
+      editorConfig.MENU_CONF['uploadImage'] = {
+        // 自定义上传
+        async customUpload(file: File, insertFn: InsertFnType) {
+          const { url } = await uploadFile(file, props['name']);
+          insertFn(url, "", "");
+        },
+      };
+      editorConfig.MENU_CONF['uploadVideo'] = {
+        // 自定义上传
+        async customUpload(file: File, insertFn: InsertFnType) {
+          const { url } = await uploadFile(file, props['name']);
+          insertFn(url, "");
+        },
+      };
+
       const uploadFileUrl = ref('');
       async function customRequest(options: UploadCustomRequestOptions) {
         const { file, onFinish } = options;
@@ -280,6 +316,22 @@
 
         onFinish();
       }
+
+      onBeforeUnmount(() => {
+        const editor = editorRef.value;
+        if (editor == null) return;
+        editor.destroy();
+      });
+
+      const handleEditorCreated = (editor) => {
+        editorRef.value = editor; // 记录 editor 实例，重要！
+        editorRef.value.on('fullScreen', () => {
+          editorStyle.value = 'z-index: 1001';
+        });
+        editorRef.value.on('unFullScreen', () => {
+          editorStyle.value = '';
+        });
+      };
 
       const handleUploadFinish = (res: any) => {
         formModel[res] = uploadFileUrl.value;
@@ -419,6 +471,11 @@
       });
 
       return {
+        editorRef,
+        editorMode,
+        editorStyle,
+        toolbarConfig,
+        editorConfig,
         formElRef,
         formModel,
         getGrid,
@@ -436,12 +493,34 @@
         customRequest,
         handleUploadFinish,
         handleUploadRemove,
+        handleEditorCreated,
       };
     },
   });
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
+  h1 {
+    font-size: 2.2em;
+    font-weight: bold;
+  }
+  h2 {
+    font-size: 1.8em;
+    font-weight: bold;
+  }
+  h3 {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  h4 {
+    font-size: 1.2em;
+    font-weight: bold;
+  }
+  h5 {
+    font-size: 1em;
+    font-weight: bold;
+  }
+
   .isFull {
     width: 100%;
     justify-content: flex-start;

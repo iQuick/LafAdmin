@@ -1,0 +1,7 @@
+name: cms/role/delete
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - role

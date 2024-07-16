@@ -13,8 +13,8 @@ const cloud = new Cloud({
 });
 
 // 上传图片
-const uploadFile = async (file: File) => {
-  const { credentials, endpoint, region } = await cloud.invokeFunction('get-sts', {});
+const uploadFile = async (file: File, dir = '') => {
+  const { credentials, endpoint, region } = await cloud.invokeFunction('oss/sts/get', {});
 
   const s3 = new S3({
     endpoint: endpoint,
@@ -28,7 +28,7 @@ const uploadFile = async (file: File) => {
     forcePathStyle: true,
   });
 
-  const key = `resource/admin/${nanoid(6)}_${file.name}`;
+  const key = `resource/${dir ? dir : 'admin'}/${nanoid(6)}_${file.name}`;
   const cmd = new PutObjectCommand({
     Bucket: bucket,
     Key: key,

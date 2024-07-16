@@ -1,0 +1,6 @@
+name: api/schema/request
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

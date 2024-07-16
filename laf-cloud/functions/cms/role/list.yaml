@@ -1,0 +1,7 @@
+name: cms/role/list
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - role

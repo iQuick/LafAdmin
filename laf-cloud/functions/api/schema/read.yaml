@@ -1,0 +1,5 @@
+name: api/schema/read
+desc: ""
+methods:
+  - POST
+tags: []

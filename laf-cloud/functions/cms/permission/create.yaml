@@ -1,0 +1,7 @@
+name: cms/permission/create
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - permission

@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { reactive, ref, toRefs } from 'vue';
-  import { deleteSchema, deleteSchemaApi } from '@/api/cms/schema';
+  import { deleteSchema } from '@/api/cms/schema';
+  import { deleteSchemaApi } from '@/api/cms/schema-api';
   import { useMessage } from 'naive-ui';
 
   const message = useMessage();

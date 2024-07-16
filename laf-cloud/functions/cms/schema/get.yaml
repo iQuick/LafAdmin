@@ -1,0 +1,7 @@
+name: cms/schema/get
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - schema

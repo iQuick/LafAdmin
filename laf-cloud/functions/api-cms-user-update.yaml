@@ -1,6 +1,0 @@
-name: api-cms-user-update
-methods:
-  - POST
-tags:
-  - user
-  - schema-api

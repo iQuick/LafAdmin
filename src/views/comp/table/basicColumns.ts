@@ -54,7 +54,10 @@ export const columns = [
           type: row.status ? 'success' : 'error',
         },
         {
-          default: () => (row.status ? '启用' : '禁用'),
+          default: () =>
+            row.status
+              ? h('p', { class: 'item-enable' }, '启用')
+              : h('p', { class: 'item-disenable' }, '禁用'),
         }
       );
     },

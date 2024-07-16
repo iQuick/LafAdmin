@@ -1,5 +1,0 @@
-name: api-cms-user-register
-methods:
-  - POST
-tags:
-  - schema-api

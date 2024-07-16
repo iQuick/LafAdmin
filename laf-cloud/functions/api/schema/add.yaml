@@ -1,0 +1,5 @@
+name: api/schema/add
+desc: ""
+methods:
+  - POST
+tags: []

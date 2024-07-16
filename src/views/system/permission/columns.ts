@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import {h} from "vue";
 
 export const columns = [
   {
@@ -16,7 +17,9 @@ export const columns = [
     key: 'status',
     width: 140,
     render(row) {
-      return row.status === 0 ? '禁用' : '启用';
+      return row.status
+        ? h('p', { class: 'item-enable' }, '启用')
+        : h('p', { class: 'item-disenable' }, '禁用');
     },
   },
   {

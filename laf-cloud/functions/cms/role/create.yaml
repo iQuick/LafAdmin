@@ -1,0 +1,7 @@
+name: cms/role/create
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - role

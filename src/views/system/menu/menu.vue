@@ -129,7 +129,7 @@
   import { ref, unref, reactive, onMounted, computed } from 'vue';
   import { useDialog, useMessage } from 'naive-ui';
   import { DownOutlined, AlignLeftOutlined, SearchOutlined, FormOutlined } from '@vicons/antd';
-  import { getMenuList } from '@/api/system/menu';
+  import { getMenuList } from '@/api/cms/menu';
   import { getTreeItem } from '@/utils';
   import CreateDrawer from './CreateDrawer.vue';
 

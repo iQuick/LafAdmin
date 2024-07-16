@@ -1,0 +1,7 @@
+name: cms/permission/all
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - permission

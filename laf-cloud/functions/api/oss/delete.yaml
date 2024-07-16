@@ -1,0 +1,5 @@
+name: api/oss/delete
+desc: ""
+methods:
+  - POST
+tags: []

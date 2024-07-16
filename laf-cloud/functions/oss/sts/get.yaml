@@ -1,0 +1,7 @@
+name: oss/sts/get
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - upload

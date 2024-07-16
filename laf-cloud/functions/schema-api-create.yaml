@@ -1,5 +1,0 @@
-name: schema-api-create
-methods:
-  - GET
-  - POST
-tags: []

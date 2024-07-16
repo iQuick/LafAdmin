@@ -1,6 +1,0 @@
-name: cms-content-create
-methods:
-  - GET
-  - POST
-tags:
-  - cms

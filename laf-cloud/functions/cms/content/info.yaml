@@ -1,0 +1,7 @@
+name: cms/content/info
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - cms

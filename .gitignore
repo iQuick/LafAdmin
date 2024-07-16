@@ -31,3 +31,6 @@ pnpm-debug.log*
 /components.d.ts
 /components.d.ts
 
+
+pnpm-lock.yaml
+yarn.lock

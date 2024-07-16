@@ -1,0 +1,6 @@
+name: __default__
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

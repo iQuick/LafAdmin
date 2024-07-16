@@ -1,0 +1,6 @@
+name: cms/setting/update
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

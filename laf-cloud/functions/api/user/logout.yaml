@@ -1,0 +1,7 @@
+name: api/user/logout
+desc: ""
+methods:
+  - POST
+tags:
+  - user
+  - schema-api

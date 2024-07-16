@@ -1,8 +1,6 @@
 const projectName = import.meta.env.VITE_GLOB_APP_TITLE;
 const level = import.meta.env.VITE_LOGGER_LEVEL;
 
-
-
 const log = (message?: any, ...optionalParams: any[]) => {
   if (level >= 0 && level <= 4) {
     message = JSON.stringify(message);

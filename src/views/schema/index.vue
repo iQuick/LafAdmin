@@ -9,7 +9,7 @@
   import SchemaDeleteModal from '../components/SchemaDeleteModal.vue';
   import SchemaCloneModal from '../components/SchemaCloneModal.vue';
 
-  import { getAllSchemas } from '@/api/cms/schema';
+  import { getSchemaAll } from '@/api/cms/schema';
   import { useDialog, useMessage } from 'naive-ui';
   import { nanoid } from 'nanoid';
   import { saveContentToFile } from '@/utils/file';
@@ -29,7 +29,7 @@
   };
 
   const handeleFetchSchemaList = async () => {
-    const res = ((await getAllSchemas()) as Schema[]).filter((it) => !it.system);
+    const res = ((await getSchemaAll()) as Schema[]).filter((it) => !it.system);
 
     schemaList.splice(0, schemaList.length, ...res);
 

@@ -1,0 +1,5 @@
+name: api/oss/upload
+desc: ""
+methods:
+  - POST
+tags: []

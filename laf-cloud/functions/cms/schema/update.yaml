@@ -1,0 +1,7 @@
+name: cms/schema/update
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - schema

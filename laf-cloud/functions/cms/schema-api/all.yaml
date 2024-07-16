@@ -1,0 +1,7 @@
+name: cms/schema-api/all
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - schema-api

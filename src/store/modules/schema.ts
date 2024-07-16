@@ -5,7 +5,7 @@ import { ACCESS_TOKEN, CURRENT_USER } from '@/store/mutation-types';
 // import { ResultEnum } from '@/enums/httpEnum';
 
 const Storage = createStorage({ storage: localStorage });
-import { getUserInfo, login } from '@/api/system/admin';
+import { getUserInfo, login } from '@/api/cms/admin';
 import { storage } from '@/utils/Storage';
 
 export interface IUserState {

@@ -1,6 +1,0 @@
-name: schema-info
-methods:
-  - GET
-  - POST
-tags:
-  - schema

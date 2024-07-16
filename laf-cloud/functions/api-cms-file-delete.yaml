@@ -1,5 +1,0 @@
-name: api-cms-file-delete
-methods:
-  - GET
-  - POST
-tags: []

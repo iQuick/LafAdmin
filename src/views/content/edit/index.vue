@@ -194,6 +194,7 @@
           submitButtonText="提交"
           resetButtonText="取消"
           layout="horizontal"
+          :name="schemaInfo.collectionName"
           :gridProps="{ cols: 1 }"
           :schemas="formSchemas"
           @handleSubmit="handleSubmit"
@@ -210,7 +211,7 @@
 
 <style lang="less" scoped>
   .BasicForm {
-    width: 700px;
+    width: 1200px;
     margin: 0 auto;
     overflow: hidden;
     padding-top: 20px;

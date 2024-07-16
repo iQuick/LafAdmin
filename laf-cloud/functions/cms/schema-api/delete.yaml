@@ -1,0 +1,6 @@
+name: cms/schema-api/delete
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

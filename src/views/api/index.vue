@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { onMounted, reactive, ref } from 'vue';
   import ApiControlList from '@/views/components/ApiControl.vue';
-  import { getAllSchemaApi, updateSchemaApi } from '@/api/cms/schema';
+  import { getSchemaApiAll, updateSchemaApi } from '@/api/cms/schema-api';
   import ApiList from '@/views/components/ApiList.vue';
 
   onMounted(() => {
@@ -12,7 +12,7 @@
   const currentApi = ref<SchemaApi>();
 
   const handleFetchApiList = async () => {
-    const res = (await getAllSchemaApi()) as SchemaApi[];
+    const res = (await getSchemaApiAll()) as SchemaApi[];
     apiList.splice(0, apiList.length, ...res);
     if (currentApi.value) {
       currentApi.value = apiList.find((_) => _._id === currentApi.value?._id || apiList[0]);

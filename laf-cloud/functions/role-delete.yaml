@@ -1,6 +1,0 @@
-name: role-delete
-methods:
-  - GET
-  - POST
-tags:
-  - role

@@ -1,5 +1,0 @@
-name: schema-api-info
-methods:
-  - GET
-  - POST
-tags: []

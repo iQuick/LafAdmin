@@ -1,5 +1,0 @@
-name: schema-api-update
-methods:
-  - GET
-  - POST
-tags: []

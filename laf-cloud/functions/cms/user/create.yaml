@@ -1,0 +1,7 @@
+name: cms/user/create
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - user

@@ -1,0 +1,7 @@
+name: cms/content/update
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - cms

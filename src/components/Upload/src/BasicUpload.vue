@@ -169,7 +169,6 @@
       //上传结束
       function finish({ event: Event }) {
         logger.log('finish', Event);
-        console.log('==================');
         const res = eval('(' + Event.target.response + ')');
         const infoField = componentSetting.upload.apiSetting.infoField;
         const { code } = res;

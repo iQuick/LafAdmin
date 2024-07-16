@@ -1,0 +1,6 @@
+name: cms/content/all
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

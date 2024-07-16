@@ -66,8 +66,8 @@
   import { h, reactive, ref, onMounted } from 'vue';
   import { useMessage } from 'naive-ui';
   import { BasicTable, TableAction } from '@/components/Table';
-  import { getRoles, createRole, deleteRole, updateRole } from '@/api/system/role';
-  import { getAllPermissions } from '@/api/system/permission';
+  import { getRoles, createRole, deleteRole, updateRole } from '@/api/cms/role';
+  import { getAllPermissions } from '@/api/cms/permission';
   import { columns } from './columns';
   import { PlusOutlined } from '@vicons/antd';
 

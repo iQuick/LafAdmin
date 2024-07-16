@@ -5,7 +5,7 @@ import { store } from '@/store';
 import { asyncRoutes, constantRouter } from '@/router/index';
 import { generatorDynamicRouter } from '@/router/generator-routers';
 import { useProjectSetting } from '@/hooks/setting/useProjectSetting';
-import { getAllSchemas } from '@/api/cms/schema';
+import { getSchemaAll } from '@/api/cms/schema';
 import { logger } from '@/utils/Logger';
 
 interface TreeHelperConfig {
@@ -110,7 +110,7 @@ export const useAsyncRouteStore = defineStore({
       } else {
         try {
           // 获取所有的内容模型，动态生成路由
-          const schemas = await getAllSchemas();
+          const schemas = await getSchemaAll();
           const contentRoute = asyncRoutes?.find((item) => item.path === '/content') as any;
           const contentChildren: any = [];
           for (const schema of schemas) {
@@ -130,6 +130,7 @@ export const useAsyncRouteStore = defineStore({
           //过滤账户是否拥有某一个权限，并将菜单从加载列表移除
           accessedRouters = filter(asyncRoutes, routeFilter);
         } catch (error) {
+          console.log(error)
           logger.log(error);
         }
       }

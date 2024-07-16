@@ -1,0 +1,6 @@
+name: cms/admin/login
+desc: ""
+methods:
+  - POST
+tags:
+  - admin

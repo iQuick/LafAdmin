@@ -1,0 +1,6 @@
+name: cms/schema-api/create
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

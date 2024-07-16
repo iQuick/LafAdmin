@@ -1,0 +1,6 @@
+name: cms/admin/update
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

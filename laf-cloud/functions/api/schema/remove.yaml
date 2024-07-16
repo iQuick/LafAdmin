@@ -1,0 +1,5 @@
+name: api/schema/remove
+desc: ""
+methods:
+  - POST
+tags: []

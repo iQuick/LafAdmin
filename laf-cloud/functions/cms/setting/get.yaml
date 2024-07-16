@@ -1,0 +1,6 @@
+name: cms/setting/get
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

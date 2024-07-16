@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { h } from 'vue';
 
 export const columns = [
   {
@@ -15,6 +16,18 @@ export const columns = [
     title: '文件类型',
     key: 'mimetype',
     width: 80,
+  },
+  {
+    title: '是否完成',
+    key: 'finished',
+    width: 80,
+    render(row) {
+      if (row.finished) {
+        return h("p", { class: 'item-yes' }, "已完成");
+      } else {
+        return h("p", { class: 'item-no' }, "未上传");
+      }
+    },
   },
   {
     title: '创建时间',

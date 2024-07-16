@@ -1,0 +1,7 @@
+name: cms/admin/create
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - admin

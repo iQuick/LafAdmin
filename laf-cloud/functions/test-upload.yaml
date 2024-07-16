@@ -1,5 +1,0 @@
-name: test-upload
-methods:
-  - GET
-  - POST
-tags: []

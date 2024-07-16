@@ -100,7 +100,6 @@
             :maxNumber="1"
             :custom-request="customRequest"
             v-model:value="formParams.avatar"
-            helpText="单个文件不超过2M，支持jpg、png格式"
           />
         </n-form-item>
         <n-form-item label="角色" path="roles">
@@ -132,8 +131,8 @@
     deleteAdmin,
     updateAdmin,
     resetPasswordAdmin,
-  } from '@/api/system/admin';
-  import { getAllRoles } from '@/api/system/role';
+  } from '@/api/cms/admin';
+  import { getAllRoles } from '@/api/cms/role';
   import { uploadFile } from '@/api/cloud';
   import { columns } from './columns';
   import { PlusOutlined } from '@vicons/antd';

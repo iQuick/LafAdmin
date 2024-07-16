@@ -1,6 +1,0 @@
-name: permission-all
-methods:
-  - GET
-  - POST
-tags:
-  - permission

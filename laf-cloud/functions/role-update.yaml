@@ -1,6 +1,0 @@
-name: role-update
-methods:
-  - GET
-  - POST
-tags:
-  - role

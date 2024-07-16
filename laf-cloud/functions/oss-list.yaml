@@ -1,5 +1,0 @@
-name: oss-list
-methods:
-  - GET
-  - POST
-tags: []

@@ -36,7 +36,6 @@
 
   const getSchemaInfo = async () => {
     const res = await getSchema(schemaId);
-    console.log(res)
     let fields: SchemaField[] = res.fields.filter((item) => !item.isHidden) || [];
     fields = [
       ...fields.filter((item) => !item.isSystem),
@@ -61,9 +60,22 @@
         title: item.displayName,
         dataIndex: item.name,
         key: item.name,
-        width: 150,
+        width: (() => {
+          if (item.name === 'status') {
+            return 40;
+          }
+          if (item.type === 'DateTime') {
+            return 100;
+          }
+          return 150;
+        })(),
         render(row) {
           if (item.type === 'Boolean') {
+            if (item.name === 'status') {
+              return row[item.name]
+                ? h('p', { class: 'item-enable' }, '启用')
+                : h('p', { class: 'item-disenable' }, '禁用');
+            }
             return row[item.name] ? '是' : '否';
           }
           if (item.type === 'Array') {
@@ -101,7 +113,10 @@
           }
           // todo connect
           if (item.type === 'Connect') {
-            return row[`relation-${item.connectCollection}`][item.connectField];
+            if (row[`relation-${item.connectCollection}`]) {
+              return row[`relation-${item.connectCollection}`][item.connectField];
+            }
+            return '';
           }
           return row[item.name];
         },
@@ -242,15 +257,15 @@
             class="search_button"
             type="primary"
             @click="handlerSearch"
-            >搜索</n-button
-          >
+            >搜索
+          </n-button>
           <n-button
             v-if="searches.length > 0"
             class="search_button"
             type="warning"
             @click="handlerClear"
-            >清除</n-button
-          >
+            >清除
+          </n-button>
         </div>
       </template>
     </BasicTable>
@@ -260,13 +275,16 @@
 <style lang="less" scoped>
   .table_head {
     display: flex;
+
     .add {
       margin-right: 16px;
     }
+
     .search_input {
       width: 120px;
       margin-right: 8px;
     }
+
     .search_button {
       margin-right: 8px;
     }

@@ -22,8 +22,9 @@ const urlPrefix = globSetting.urlPrefix || '';
 
 import router from '@/router';
 import { storage } from '@/utils/Storage';
-import { ACCESS_TOKEN, CURRENT_USER, IS_LOCKSCREEN } from '@/store/mutation-types';
+import { ACCESS_TOKEN, CURRENT_USER } from '@/store/mutation-types';
 import { logger } from '@/utils/Logger';
+import { Recordable } from 'vite-plugin-mock';
 
 /**
  * @description: 数据处理，方便区分多种处理方式
@@ -65,7 +66,7 @@ const transform: AxiosTransform = {
     //  这里 code，result，message为 后台统一的字段，需要修改为项目自己的接口返回格式
     const { code, result, message } = data;
     // 请求成功
-    const hasSuccess = data && Reflect.has(data, 'code') && code === ResultEnum.SUCCESS;
+    const hasSuccess = data && data.code && data.code === ResultEnum.SUCCESS;
     // 是否显示提示信息
     if (isShowMessage) {
       if (hasSuccess && (successMessageText || isShowSuccessMessage)) {

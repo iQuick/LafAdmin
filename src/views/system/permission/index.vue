@@ -63,7 +63,7 @@
     createPermission,
     deletePermission,
     updatePermission,
-  } from '@/api/system/permission';
+  } from '@/api/cms/permission';
   import { columns } from './columns';
   import { PlusOutlined } from '@vicons/antd';
 

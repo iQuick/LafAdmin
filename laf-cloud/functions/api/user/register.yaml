@@ -1,0 +1,6 @@
+name: api/user/register
+desc: ""
+methods:
+  - POST
+tags:
+  - schema-api

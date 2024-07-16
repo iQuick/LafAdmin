@@ -1,0 +1,7 @@
+name: cms/admin/get
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - admin

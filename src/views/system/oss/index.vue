@@ -19,8 +19,8 @@
   import { BasicTable, TableAction } from '@/components/Table';
   import { columns } from './columns';
   import { logger } from '@/utils/Logger';
-  import { getList, deleteFile } from '@/api/system/oss';
-  import { getAllRoles } from '@/api/system/role';
+  import { getList, deleteFile } from '@/api/cms/oss';
+  import { getAllRoles } from '@/api/cms/role';
   import { useUserStoreWidthOut } from '@/store/modules/user';
 
   const userStore = useUserStoreWidthOut();
