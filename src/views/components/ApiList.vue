@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { computed } from 'vue';
   import { toRefs } from 'vue';
+  import { useUserStoreWidthOut } from '@/store/modules/user';
 
   const props = defineProps<{
     apiList: SchemaApi[];
@@ -9,9 +10,25 @@
 
   const emit = defineEmits(['changeApi']);
 
-  const { apiList } = toRefs(props);
+  const userStore = useUserStoreWidthOut();
+  const { permissions } = userStore;
+
+  // const { apiList } = toRefs(props);
 
   const activeKey = computed(() => props.currentApi?._id);
+
+  const hasPermission = (schema) => {
+    if (schema.collectionName === 'user') {
+      return permissions.includes('pms.menu.user');
+    }
+    if (schema.collectionName === 'user-token') {
+      return permissions.includes('pms.menu.user.token');
+    }
+    if (schema.collectionName === 'oss') {
+      return permissions.includes('pms.menu.oss.manager');
+    }
+    return permissions.includes(`pms.content.${schema.collectionName}.menu`);
+  };
 
   const handleChangeApi = (key: string) => {
     emit('changeApi', key);
@@ -23,7 +40,7 @@
     class="schema-list-box"
     v-model:value="activeKey"
     mode="vertical"
-    :options="apiList.map((_) => ({ key: _._id, label: _.displayName }))"
+    :options="apiList.filter((_) => hasPermission(_)).map((_) => ({ key: _._id, label: _.displayName }))"
     @update:value="handleChangeApi"
   />
 </template>

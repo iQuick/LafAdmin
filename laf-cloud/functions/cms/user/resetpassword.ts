@@ -1,32 +1,25 @@
 import cloud from '@lafjs/cloud';
+import { ok, fail } from '@/system/call';
+import { checkToken, checkPermission, hashPassword } from '@/system/sys';
+import { PARAMS_EMPTY } from '@/system/fail';
 
 const db = cloud.database();
-const checkPermission = cloud.shared.get('checkPermission');
-const hashPassword = cloud.shared.get('hashPassword');
 
 export async function main(ctx: FunctionContext) {
-
-  const { headers } = ctx;
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return 'Unauthorized';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
-  // 权限验证
-  const code = await checkPermission(uid, 'user.edit');
-  if (code) {
-    return { code: '403', error: 'Permission denied' };
+  const pms = await checkPermission(token.uid, 'user.edit');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   const { _id, username, password } = ctx.body;
-  if (!_id || !username || !password)
-    return {
-      code: 'INVALID_PARAM',
-      error: 'username and password and newpassword not be empty',
-    };
-
+  if (!_id || !username || !password) {
+    return fail(PARAMS_EMPTY);
+  }
   const { data: user } = await db
     .collection('user')
     .where({ _id, username })
@@ -38,15 +31,11 @@ export async function main(ctx: FunctionContext) {
     })
     .getOne();
 
-
   // update password
-  await db
-    .collection('password')
-    .where({ uid: user._id, type: 'user', status: 'active' })
-    .update({
-      status: 'inactive',
-      updated_at: Date.now(),
-    });
+  await db.collection('password').where({ uid: user._id, type: 'user', status: 'active' }).update({
+    status: 'inactive',
+    updated_at: Date.now(),
+  });
 
   await db.collection('password').add({
     uid: user._id,
@@ -57,8 +46,5 @@ export async function main(ctx: FunctionContext) {
     updated_at: Date.now(),
   });
 
-  return {
-    code: 0,
-    result: 'success',
-  };
+  return ok('success');
 }

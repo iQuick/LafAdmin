@@ -1,79 +1,54 @@
 import cloud from '@lafjs/cloud';
+import { createSchema } from '@/system/schema';
+import { ok, fail } from '@/system/call';
+import { FAIL_SCHEMA_CREATE } from '@/system/fail';
+import { WHITE_COLLECTION_LIST, checkPermission, checkToken } from '@/system/sys';
+import { ALREADY_EXIST_SCHEMA, INVALID_COLLECTION_NAME, PARAMS_EMPTY } from '@/system/fail';
 
 const db = cloud.database();
 const mongodb = cloud.mongo.db;
 
 export async function main(ctx: FunctionContext) {
-  const { headers } = ctx;
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return 'Unauthorized';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
+  }
+
+  const pms = await checkPermission(token.uid, 'schema.create');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   const { displayName, collectionName, fields = [], description } = ctx.body;
   if (!displayName || !collectionName) {
-    return 'displayName or collectionName cannot be empty';
+    return fail(PARAMS_EMPTY);
   }
 
   // check collectionName
-  const whiteList = ['schema','schema-api', 'admin', 'role', 'permission', 'password'];
-  if (whiteList.indexOf(collectionName) > -1) {
-    return 'collectionName cannot be ' + whiteList.join(', ');
+  if (WHITE_COLLECTION_LIST.indexOf(collectionName) > -1) {
+    return fail(INVALID_COLLECTION_NAME);
   }
 
   // check exist
   const { total } = await db.collection('schema').where({ collectionName }).count();
   if (total > 0) {
-    return 'schema already exists';
+    return fail(ALREADY_EXIST_SCHEMA);
   }
 
-  const schema = {
-    displayName,
-    collectionName,
-    fields: [
-      ...fields,
-      {
-        displayName: '状态',
-        name: 'status',
-        type: 'number',
-        id: 'status',
-        isSystem: true,
-        description: 'CMS 系统字段，请勿随意修改。通过 CMS 系统录入的数据会默认添加该字段',
-      },
-      {
-        displayName: '创建时间',
-        name: 'created_at',
-        type: 'DateTime',
-        dateFormatType: 'timestamp-ms',
-        id: 'created_at',
-        isSystem: true,
-        description: 'CMS 系统字段，请勿随意修改。通过 CMS 系统录入的数据会默认添加该字段',
-      },
-      {
-        displayName: '更新时间',
-        name: 'updated_at',
-        type: 'DateTime',
-        dateFormatType: 'timestamp-ms',
-        id: 'updated_at',
-        isSystem: true,
-        description: 'CMS 系统字段，请勿随意修改。通过 CMS 系统录入的数据会默认添加该字段',
-      },
-    ],
-    description,
-    created_at: Date.now(),
-    updated_at: Date.now(),
-  };
-
   // add collection to schema
-  const addRes = await db.collection('schema').add(schema);
-
-  // add collection to mongodb
-  await mongodb.createCollection(collectionName);
-
-  return {
-    code: 0,
-    data: addRes,
-  };
+  const session = cloud.mongo.client.startSession();
+  try {
+    session.startTransaction();
+    await createSchema(token.uid, displayName, collectionName, fields, description);
+    // add collection to mongodb
+    await mongodb.createCollection(collectionName);
+    await session.commitTransaction();
+    return ok('success');
+  } catch (err) {
+    await session.abortTransaction()
+    console.log('Error create schema : ', err)
+    return fail(FAIL_SCHEMA_CREATE);
+  } finally {
+    await session.endSession();
+  }
 }

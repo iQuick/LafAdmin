@@ -121,6 +121,7 @@ export const useAsyncRouteStore = defineStore({
               name: collectionName,
               meta: {
                 title: displayName,
+                permissions: [`pms.content.${schema.collectionName}.menu`],
               },
               component: () => import('@/views/content/list/index.vue'),
             });
@@ -130,7 +131,6 @@ export const useAsyncRouteStore = defineStore({
           //过滤账户是否拥有某一个权限，并将菜单从加载列表移除
           accessedRouters = filter(asyncRoutes, routeFilter);
         } catch (error) {
-          console.log(error)
           logger.log(error);
         }
       }

@@ -1,35 +1,32 @@
 import cloud from '@lafjs/cloud';
-const db = cloud.database();
-const shared = cloud.shared;
+import { ok, fail } from '@/system/call';
+import { checkPermission, hashPassword, checkToken } from '@/system/sys';
+import { ACCOUNT_ALREADY_EXIST, ACCOUNT_PASSWD_EMPTY, ROLES } from '@/system/fail';
 
-const checkPermission = shared.get('checkPermission');
-const hashPassword = shared.get('hashPassword');
+const db = cloud.database();
 
 export async function main(ctx: FunctionContext) {
-  const { headers } = ctx;
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return 'Unauthorized';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
   // check permission
-  const code = await checkPermission(uid, 'admin.create');
-  if (code) {
-    return 'Permission denied';
+  const pms = await checkPermission(token.uid, 'admin.create');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   // check params
   const { username, password, avatar, name, roles } = ctx.body;
   if (!username || !password) {
-    return 'username & password cannot be empty';
+    return fail(ACCOUNT_PASSWD_EMPTY);
   }
 
   // check exist
   const { total } = await db.collection('admin').where({ username }).count();
   if (total > 0) {
-    return 'username already exists';
+    return fail(ACCOUNT_ALREADY_EXIST);
   }
 
   // check role validation
@@ -41,11 +38,11 @@ export async function main(ctx: FunctionContext) {
     .count();
 
   if (valid_count !== roles.length) {
-    return 'invalid roles';
+    return fail(ROLES);
   }
 
   // add admin
-  const r = await db.collection('admin').add({
+  const rsp = await db.collection('admin').add({
     username,
     name: name ?? null,
     avatar: avatar ?? null,
@@ -55,7 +52,7 @@ export async function main(ctx: FunctionContext) {
   });
 
   await db.collection('password').add({
-    uid: r.id,
+    uid: rsp.id,
     password: hashPassword(password),
     type: 'admin',
     status: 'active',
@@ -63,8 +60,5 @@ export async function main(ctx: FunctionContext) {
     updated_at: Date.now(),
   });
 
-  return {
-    code: 0,
-    result: r,
-  };
+  return ok(rsp);
 }

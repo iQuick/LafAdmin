@@ -13,7 +13,7 @@ import { isString } from '@/utils/is/';
 import { deepMerge, isUrl } from '@/utils';
 import { setObjToUrlParams } from '@/utils/urlUtils';
 
-import { RequestOptions, Result, CreateAxiosOptions } from './types';
+import { RequestOptions, ApiResult, CreateAxiosOptions } from './types';
 
 import { useUserStoreWidthOut } from '@/store/modules/user';
 
@@ -25,6 +25,7 @@ import { storage } from '@/utils/Storage';
 import { ACCESS_TOKEN, CURRENT_USER } from '@/store/mutation-types';
 import { logger } from '@/utils/Logger';
 import { Recordable } from 'vite-plugin-mock';
+const API_URL = import.meta.env.VITE_GLOB_LAF_URL;
 
 /**
  * @description: 数据处理，方便区分多种处理方式
@@ -33,7 +34,7 @@ const transform: AxiosTransform = {
   /**
    * @description: 处理请求数据
    */
-  transformRequestData: (res: AxiosResponse<Result>, options: RequestOptions) => {
+  transformRequestData: (res: AxiosResponse<ApiResult>, options: RequestOptions) => {
     const {
       isShowMessage = true,
       isShowErrorMessage,
@@ -54,17 +55,15 @@ const transform: AxiosTransform = {
       return res.data;
     }
 
-    const { data } = res;
-
     const $dialog = window['$dialog'];
     const $message = window['$message'];
 
-    if (!data) {
+    if (!res.data) {
       // return '[HTTP] Request has no return value';
       throw new Error('请求出错，请稍候重试');
     }
     //  这里 code，result，message为 后台统一的字段，需要修改为项目自己的接口返回格式
-    const { code, result, message } = data;
+    const { code, data, msg } = res.data;
     // 请求成功
     const hasSuccess = data && data.code && data.code === ResultEnum.SUCCESS;
     // 是否显示提示信息
@@ -73,16 +72,16 @@ const transform: AxiosTransform = {
         // 是否显示自定义信息提示
         $dialog.success({
           type: 'success',
-          content: successMessageText || message || '操作成功！',
+          content: successMessageText || msg || '操作成功！',
         });
       } else if (!hasSuccess && (errorMessageText || isShowErrorMessage)) {
         // 是否显示自定义信息提示
-        $message.error(message || errorMessageText || '操作失败！');
+        $message.error(msg || errorMessageText || '操作失败！');
       } else if (!hasSuccess && options.errorMessageMode === 'modal') {
         // errorMessageMode=‘custom-modal’的时候会显示modal错误弹窗，而不是消息提示，用于一些比较重要的错误
         $dialog.info({
           title: '提示',
-          content: message,
+          content: msg,
           positiveText: '确定',
           onPositiveClick: () => {},
         });
@@ -91,10 +90,10 @@ const transform: AxiosTransform = {
 
     // 接口请求成功，直接返回结果
     if (code === 0 || code === ResultEnum.SUCCESS) {
-      return result;
+      return data;
     }
     // 接口请求错误，统一提示错误信息 这里逻辑可以根据项目进行修改
-    let errorMsg = message;
+    let errorMsg = msg;
 
     const LoginName = PageEnum.BASE_LOGIN_NAME;
     const LoginPath = PageEnum.BASE_LOGIN;
@@ -128,7 +127,7 @@ const transform: AxiosTransform = {
         // 到登录页
         storage.remove(ACCESS_TOKEN);
         storage.remove(CURRENT_USER);
-        window.location.href = 'https://rongjin.walle.fun/#/login';
+        window.location.href = `${API_URL}/#/login`;
         break;
     }
     throw new Error(errorMsg);

@@ -32,7 +32,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: '用户列表',
           activeMenu: 'User',
-          permissions: ['user'],
+          permissions: ['pms.menu.user'],
         },
         component: () => import('@/views/user/user/index.vue'),
       },
@@ -42,29 +42,9 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: '鉴权Token',
           activeMenu: 'Token',
-          permissions: ['user.token'],
+          permissions: ['pms.menu.user.token'],
         },
-        component: () => import('@/views/user/token/list/index.vue'),
-      },
-      {
-        path: ':schemaId/edit/:contentId',
-        name: 'UserContentEdit',
-        meta: {
-          title: '更新内容',
-          activeMenu: 'Schema',
-          hidden: true,
-        },
-        component: () => import('@/views/user/token/edit/index.vue'),
-      },
-      {
-        path: ':schemaId/create',
-        name: 'UserContentCreate',
-        meta: {
-          title: '增加内容',
-          activeMenu: 'Schema',
-          hidden: true,
-        },
-        component: () => import('@/views/user/token/edit/index.vue'),
+        component: () => import('@/views/user/token/index.vue'),
       },
     ],
   },

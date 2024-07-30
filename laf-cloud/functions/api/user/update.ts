@@ -1,11 +1,11 @@
 import cloud from '@lafjs/cloud';
-import * as call from '@/system/call'
 import { PHONE, EMAIL } from '@/utils/regex';
+import { ok, fail } from '@/system/call';
+import { INVALID_EMAIL, INVALID_PHONE } from '@/system/fail';
 
 const db = cloud.database();
 
 export default async function (ctx: FunctionContext) {
-
   const { uid } = ctx.headers;
   const { nickname, avatar, phone, email } = ctx.body;
 
@@ -18,25 +18,24 @@ export default async function (ctx: FunctionContext) {
   }
   if (phone) {
     if (!PHONE.test(phone)) {
-      return call.FAIL_PHONE;
+      return fail(INVALID_PHONE);
     }
     data.phone = phone;
   }
   if (email) {
     if (!EMAIL.test(email)) {
-      return call.FAIL_EMAIL;
+      return fail(INVALID_EMAIL);
     }
     data.email = email;
   }
 
-
   const r = await db
     .collection('user')
-    .where({ _id: uid })
+    .doc(uid)
     .update({
       ...data,
       updated_at: Date.now(),
     });
 
-  return call.ok({ ...r, uid });
+  return ok();
 }

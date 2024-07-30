@@ -1,18 +1,15 @@
-import cloud from '@lafjs/cloud'
-import * as call from '@/system/call'
+import cloud from '@lafjs/cloud';
+import { hashPassword } from '@/system/sys';
+import { ok, fail } from '@/system/call';
+import { ACCOUNT_ALREADY_EXIST, ACCOUNT_PASSWD_EMPTY } from '@/system/fail';
 
 const db = cloud.database();
-const shared = cloud.shared;
-
-
-const hashPassword = shared.get('hashPassword');
 
 export default async function (ctx: FunctionContext) {
-
   const { username, password, avatar, phone, email } = ctx.body;
 
   if (!username || !password) {
-    return call.FAIL_ACCOUNT_PASSWD_EMPTY;
+    return fail(ACCOUNT_PASSWD_EMPTY);
   }
 
   let { nickname } = ctx.body;
@@ -23,9 +20,8 @@ export default async function (ctx: FunctionContext) {
   // check exist
   const { total } = await db.collection('user').where({ username }).count();
   if (total > 0) {
-    return call.FAIL_ACCOUNT_ALREADY_EXIST;
+    return fail(ACCOUNT_ALREADY_EXIST);
   }
-
 
   // add user
   const r = await db.collection('user').add({
@@ -47,5 +43,5 @@ export default async function (ctx: FunctionContext) {
     updated_at: Date.now(),
   });
 
-  return call.ok(r);
+  return ok();
 }

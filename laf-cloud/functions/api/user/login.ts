@@ -1,20 +1,22 @@
-import cloud from '@lafjs/cloud'
-import * as call from '@/system/call'
+import cloud from '@lafjs/cloud';
+import { hashPassword } from '@/system/sys';
+import { createUserToken } from '@/system/token';
+import { ok, fail } from '@/system/call';
+import { ACCOUNT_PASSWD_EMPTY, ACCOUNT_PASSWD_INVALID, INVALID_USER_ACCOUNT } from '@/system/fail';
 
 const db = cloud.database();
-const hashPassword = cloud.shared.get('hashPassword');
 
 export default async function (ctx: FunctionContext) {
   const { username, password } = ctx.body;
   if (!username || !password) {
-    return call.FAIL_ACCOUNT_PASSWD_EMPTY;
+    return fail(ACCOUNT_PASSWD_EMPTY);
   }
 
   const { data: user } = await db
     .collection('user')
     .where({ username })
     .withOne({
-      query: db.collection('password').where({ type: 'user', status: "active" }),
+      query: db.collection('password').where({ type: 'user', status: 'active' }),
       localField: '_id',
       foreignField: 'uid',
       as: 'password',
@@ -24,32 +26,19 @@ export default async function (ctx: FunctionContext) {
   // check username and password
   const isMatchPassword = user.password?.password === hashPassword(password);
   if (!user || !isMatchPassword) {
-    return call.FAIL_ACCOUNT_PASSWD_INVALID;
+    return fail(ACCOUNT_PASSWD_INVALID);
   }
 
-  // 默认 token 有效期为 7 天
-  const expire = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7;
-  const payload = {
-    uid: user._id,
-    type: 'user',
-    exp: expire,
-  };
+  if (!user.status) {
+    return fail(INVALID_USER_ACCOUNT);
+  }
 
-  const access_token = cloud.getToken(payload);
+  const token = await createUserToken(user._id);
 
-
-  await db.collection('user-token').where({ 'uid': user._id }).remove({ multi: true });
-  await db.collection('user-token').add({
-    uid: user._id,
-    token: access_token,
-    expired_at: expire * 1000,
-    created_at: Date.now(),
-    updated_at: Date.now()
-  });
-
-  return call.ok({
-    access_token,
-    uid: user._id,
-    expire,
+  Reflect.deleteProperty(user, 'password');
+  user.avatar = user.avatar.length > 0 ? user.avatar[0] : '';
+  return ok({
+    ...user,
+    token,
   });
 }

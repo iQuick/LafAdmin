@@ -1,53 +1,70 @@
-import cloud from '@lafjs/cloud'
+import cloud from '@lafjs/cloud';
 import * as crypto from 'crypto';
-
+import { PERMISSION, UNAUTHORIZED, USER_TOKEN_EXPIRE, USER_TOKEN_INVALID } from '@/system/fail';
 
 const db = cloud.database();
 
 /**
  * @params token 用户 token
  */
-export async function checkToken(ctx: FunctionContext): Promise<number> {
-  const { token } = ctx.headers;
-
-  if (!token) {
-    return 403;
+export async function checkToken(ctx: FunctionContext): Promise<any> {
+  const authorization = ctx.headers['authorization'];
+  if (!authorization) {
+    return UNAUTHORIZED;
   }
 
-  const tuid = cloud.parseToken(token);
-  if (!tuid) {
-    return 401;
+  const tks = authorization.split(' ');
+  if (tks.length !== 2 || tks[0] !== 'Bearer') {
+    return UNAUTHORIZED;
   }
 
-  const { data: td } = await db.collection('user-token').where({ 'uid': tuid }).getOne();
-
-  if (!td) {
-    return 401;
+  const payload = cloud.parseToken(tks[1]);
+  if (!payload || !payload.uid) {
+    return USER_TOKEN_INVALID;
   }
 
-  if (td.expired_at > Date.now()) {
-    return 402;
+  const { path } = ctx.request;
+  if (!(
+    (path.startsWith('/cms/') && payload.type === 'admin') ||
+    (path.startsWith('/api/') && payload.type === 'user')
+  )) {
+    return USER_TOKEN_INVALID;
   }
 
-  return 0;
+  if (payload.type === 'user') {
+    // 用户需检查 user-token 看 Token 是否被禁用或删除
+    const { data: utoken } = await db
+      .collection('user-token')
+      .where({ uid: payload.uid, token: payload.token })
+      .getOne()
+    if (!utoken || !utoken.status) {
+      return USER_TOKEN_INVALID;
+    }
+  }
+
+  if (payload.expired_at > Date.now()) {
+    return USER_TOKEN_EXPIRE;
+  }
+
+  return { code: 0, ...payload };
 }
 
 /**
  * 判断用户是否有权限
  * @param uid 用户ID
  * @param permission 权限名
- * @returns 0 表示用户有权限， 401 表示用户未登录， 403 表示用户未授权
+ * @returns 0 表示用户有权限， UNAUTHORIZED 表示用户未登录， PERMISSION 表示用户未授权
  */
-export async function checkPermission(uid: string, permission: string): Promise<number> {
+export async function checkPermission(uid: string, permission: string): Promise<any> {
   if (!uid) {
-    return 401;
+    return UNAUTHORIZED;
   }
-  const { permissions } = await getPermissions(uid);
 
-  if (!permissions.includes(permission)) {
-    return 403;
+  const { permissions } = await getPermissions(uid);
+  if (!permissions.includes(`pms.${permission}`)) {
+    return PERMISSION;
   }
-  return 0;
+  return { code: 0 };
 }
 
 /**
@@ -58,7 +75,7 @@ export async function checkPermission(uid: string, permission: string): Promise<
 export async function getPermissions(uid: string) {
   const db = cloud.database();
   // 查用户
-  const { data: admin } = await db.collection('admin').where({ _id: uid }).getOne();
+  const { data: admin } = await db.collection('admin').where({ _id: uid, status: 1 }).getOne();
 
   // 查角色
   const { data: roles } = await db
@@ -67,6 +84,7 @@ export async function getPermissions(uid: string) {
       name: {
         $in: admin.roles ?? [],
       },
+      status: 1
     })
     .get();
 
@@ -74,9 +92,21 @@ export async function getPermissions(uid: string) {
     return { permissions: [], roles: [], user: admin };
   }
 
+  const disenablePermissions = (
+    await db
+      .collection('permission')
+      .where({ status: 0 })
+      .limit(1000)
+      .get()
+  ).data.map(item => {
+    return item.name;
+  });
+
   const permissions = [];
   for (const role of roles) {
-    const perms = role.permissions ?? [];
+    const perms = role.permissions.filter(item => {
+      return !disenablePermissions.includes(item);
+    }) ?? [];
     permissions.push(...perms);
   }
 

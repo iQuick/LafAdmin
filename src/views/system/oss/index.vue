@@ -19,7 +19,7 @@
   import { BasicTable, TableAction } from '@/components/Table';
   import { columns } from './columns';
   import { logger } from '@/utils/Logger';
-  import { getList, deleteFile } from '@/api/cms/oss';
+  import { getList, deleteFile } from '@/api/cms/oss-manager';
   import { getAllRoles } from '@/api/cms/role';
   import { useUserStoreWidthOut } from '@/store/modules/user';
 
@@ -61,14 +61,14 @@
               confirm: handleDelete.bind(null, record),
             },
             ifShow: () => {
-              return permissions.includes('oss.manager.delete');
+              return permissions.includes('pms.oss.manager.delete');
             },
           },
           {
             label: '下载',
             onClick: handleDownload.bind(null, record),
             ifShow: () => {
-              return true;
+              return permissions.includes('pms.oss.manager.read');
             },
           },
         ],

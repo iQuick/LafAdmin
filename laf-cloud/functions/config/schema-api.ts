@@ -65,7 +65,9 @@ const innerSchemaApis = [{
         "Authorization": "Token(必填|String)"
       },
       "params": {},
-      "body": {},
+      "body": {
+        "refreshToken": "刷新Token"
+      },
       "collapse": false
     },
     "resetpasswd": {

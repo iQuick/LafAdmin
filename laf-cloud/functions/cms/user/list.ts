@@ -1,23 +1,20 @@
 import cloud from '@lafjs/cloud';
-
-const checkPermission = cloud.shared.get('checkPermission');
+import { ok, fail } from '@/system/call';
+import { checkToken, checkPermission } from '@/system/sys';
 
 export async function main(ctx: FunctionContext) {
-  // body, query 为请求参数, auth 是授权对象
-  const { body, query, headers } = ctx;
-
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) return { code: '401', error: '未授权访问' };
-
-  // checkPermission
-  const code = await checkPermission(uid, 'user.read');
-  if (code) {
-    return 'Permission denied';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
-  const { page, pageSize } = body;
+  const pms = await checkPermission(token.uid, 'user.read');
+  if (pms.code !== 0) {
+    return fail(pms);
+  }
+
+  // body, query 为请求参数, auth 是授权对象
+  const { page, pageSize } = ctx.body;
 
   // 数据库操作
   const db = cloud.database();
@@ -30,16 +27,13 @@ export async function main(ctx: FunctionContext) {
     .limit(pageSize)
     .get();
 
-  return {
-    code: 0,
-    result: {
-      list: r.data.map((_) => {
-        Reflect.deleteProperty(_, 'password');
-        return _;
-      }),
-      page,
-      pageSize,
-      pageCount: Math.ceil(total / pageSize),
-    },
-  };
+  return ok({
+    list: r.data.map((_) => {
+      Reflect.deleteProperty(_, 'password');
+      return _;
+    }),
+    page,
+    pageSize,
+    pageCount: Math.ceil(total / pageSize),
+  });
 }

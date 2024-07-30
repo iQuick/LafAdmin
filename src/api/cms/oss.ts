@@ -1,19 +1,9 @@
 import { http } from '@/utils/http/axios';
 
-export function getList(params) {
+export function getSts() {
   return http.request({
-    url: '/cms/oss/list',
+    url: '/cms/oss/sts',
     method: 'POST',
-    data: params,
-  });
-}
-
-export function deleteFile(_id) {
-  return http.request({
-    url: '/cms/oss/delete',
-    method: 'POST',
-    data: {
-      _id,
-    },
+    data: {},
   });
 }

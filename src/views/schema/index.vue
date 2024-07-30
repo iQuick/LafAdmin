@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { reactive, ref, onMounted } from 'vue';
+  import { reactive, ref, inject, onMounted } from 'vue';
 
   import SchemaList from '../components/SchemaList.vue';
   import FieldList from '../components/FieldList.vue';
@@ -9,17 +9,19 @@
   import SchemaDeleteModal from '../components/SchemaDeleteModal.vue';
   import SchemaCloneModal from '../components/SchemaCloneModal.vue';
 
-  import { getSchemaAll } from '@/api/cms/schema';
   import { useDialog, useMessage } from 'naive-ui';
   import { nanoid } from 'nanoid';
   import { saveContentToFile } from '@/utils/file';
-  import { logger } from '@/utils/Logger';
+  import { useUserStoreWidthOut } from '@/store/modules/user';
 
   const dialog = useDialog();
   const message = useMessage();
+  const reloadPage = inject('reloadPage');
+
+  const userStore = useUserStoreWidthOut();
 
   onMounted(() => {
-    handeleFetchSchemaList();
+    handleFetchSchemaList();
   });
 
   const schemaList = reactive<Schema[]>([]);
@@ -28,8 +30,17 @@
     currentSchema.value = schemaList.find((_: Schema) => _._id === key);
   };
 
-  const handeleFetchSchemaList = async () => {
-    const res = ((await getSchemaAll()) as Schema[]).filter((it) => !it.system);
+  const handleCreated = async () => {
+    reloadPage();
+  };
+
+  const handleFetchSchemaList = async () => {
+    await userStore.GetInfo();
+    const schemas = await userStore.GetSchema();
+    const { permissions } = userStore;
+    const res = (schemas as Schema[]).filter(
+      (it) => !it.system && permissions.includes(`pms.content.${it.collectionName}.menu`)
+    );
 
     schemaList.splice(0, schemaList.length, ...res);
 
@@ -96,8 +107,8 @@
 <template>
   <div>
     <n-card :bordered="false">
-      <n-button class="mr-3" type="primary" @click="handleCreateSchema"> 新增模型 </n-button>
-      <n-button class="mr-3" type="primary"> 导入模型 </n-button>
+      <n-button class="mr-3" type="primary" @click="handleCreateSchema"> 新增模型</n-button>
+      <n-button class="mr-3" type="primary"> 导入模型</n-button>
     </n-card>
 
     <div class="schema-wrap">
@@ -106,21 +117,21 @@
         :modalType="schemaModalType"
         :currentSchema="currentSchema"
         @closeModal="() => (showSchemaCreateModal = false)"
-        @fetchSchemaList="handeleFetchSchemaList"
+        @created="handleCreated"
       />
 
       <SchemaDeleteModal
         :modelValue="showSchemaDeleteModal"
         :currentSchema="currentSchema"
         @closeModal="() => (showSchemaDeleteModal = false)"
-        @fetchSchemaList="handeleFetchSchemaList"
+        @fetchSchemaList="handleFetchSchemaList"
       />
 
       <SchemaCloneModal
         :modelValue="showSchemaCloneModal"
         :currentSchema="currentSchema"
         @closeModal="() => (showSchemaCloneModal = false)"
-        @fetchSchemaList="handeleFetchSchemaList"
+        @fetchSchemaList="handleFetchSchemaList"
       />
 
       <FieldCreateModal
@@ -130,7 +141,7 @@
         :currentSchema="currentSchema"
         :allSchemas="schemaList"
         @closeModal="() => (showFieldCreateModal = false)"
-        @fetchSchemaList="handeleFetchSchemaList"
+        @fetchSchemaList="handleFetchSchemaList"
       />
 
       <SchemaList
@@ -142,7 +153,7 @@
       <FieldList
         :currentSchema="currentSchema"
         @updateField="handleUpdateField"
-        @fetchSchemaList="handeleFetchSchemaList"
+        @fetchSchemaList="handleFetchSchemaList"
         @updateSchema="handleUpdateSchema"
         @deleteSchema="handleDeleteSchema"
         @exportSchema="handleExportSchema"

@@ -1,49 +1,52 @@
 import cloud from '@lafjs/cloud';
+import { deleteSchema } from '@/system/schema';
+import { ok, fail } from '@/system/call';
+import { checkToken, checkPermission } from '@/system/sys';
+import { INVALID_SCHEMA, PARAMS_EMPTY, FAIL_DELETE_SCHEMA } from '@/system/fail';
 
 const db = cloud.database();
-const mongodb = cloud.mongo.db;
-
-const shared = cloud.shared;
-const checkPermission = shared.get('checkPermission');
+const mongo = cloud.mongo.db;
 
 export async function main(ctx: FunctionContext) {
-  const { headers } = ctx;
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return 'Unauthorized';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
-  // check permission
-  const code = await checkPermission(uid, 'schema.edit');
-  if (code) {
-    return 'Permission denied';
+  const pms = await checkPermission(token.uid, 'schema.delete');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   const { schemaId, deleteCollection } = ctx.body;
   if (!schemaId) {
-    return '_id cannot be empty';
+    return fail(PARAMS_EMPTY);
   }
 
   // check id
   const { data: schema } = await db.collection('schema').doc(schemaId).get();
   if (!schema) {
-    return { code: 'INVALID_PARAM', error: 'not exists' };
+    return fail(INVALID_SCHEMA);
   }
 
-  // delete schema
-  const res = await db.collection('schema').doc(schemaId).remove();
 
-  // delete collection
-  if (deleteCollection) {
-    mongodb.dropCollection(schema.collectionName);
-  } else {
-    mongodb.renameCollection(schema.collectionName, `${schema.collectionName}-${Date.now()}`)
+  const session = cloud.mongo.client.startSession();
+  try {
+    session.startTransaction();
+    await deleteSchema(token.uid, schema);
+    // delete collection
+    if (deleteCollection) {
+      await mongo.dropCollection(schema.collectionName);
+    } else {
+      await mongo.renameCollection(schema.collectionName, `${schema.collectionName}-${Date.now()}`);
+    }
+    await session.commitTransaction();
+    return ok('success')
+  } catch (err) {
+    await session.abortTransaction()
+    console.log('Error delete schema : ', err)
+    return fail(FAIL_DELETE_SCHEMA)
+  } finally {
+    await session.endSession();
   }
-
-  return {
-    code: 0,
-    data: res,
-  };
 }

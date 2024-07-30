@@ -1,36 +1,32 @@
 import cloud from '@lafjs/cloud';
+import { ok, fail } from '@/system/call';
 import { PHONE, EMAIL } from '@/utils/regex';
-const db = cloud.database();
-const shared = cloud.shared;
+import { checkToken, checkPermission, hashPassword } from '@/system/sys';
+import { INVALID_EMAIL, INVALID_PHONE, INVALID_USER, PARAMS_EMPTY } from '@/system/fail';
 
-const checkPermission = shared.get('checkPermission');
-const hashPassword = shared.get('hashPassword');
+const db = cloud.database();
 
 export async function main(ctx: FunctionContext) {
-  const { headers } = ctx;
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return 'Unauthorized';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
-  // 权限验证
-  const code = await checkPermission(uid, 'user.edit');
-  if (code) {
-    return { code: '403', error: 'Permission denied' };
+  const pms = await checkPermission(token.uid, 'user.edit');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   // 参数验证
   const { _id, username, password, avatar, nickname, phone, email } = ctx.body;
   if (!_id) {
-    return { code: 'INVALID_PARAM', error: 'user id cannot be empty' };
+    return fail(PARAMS_EMPTY);
   }
 
   // 验证 user _id 是否合法
   const { data: user } = await db.collection('user').where({ _id: _id }).getOne();
   if (!user) {
-    return { code: 'INVALID_PARAM', error: 'user not exists' };
+    return fail(INVALID_USER);
   }
 
   const old = user;
@@ -62,11 +58,10 @@ export async function main(ctx: FunctionContext) {
     data['avatar'] = avatar;
   }
 
-
   // phone
   if (phone && phone != old.phone) {
     if (!PHONE.test(phone)) {
-      return { code: 1001, message: "手机号格式不正确" };
+      return fail(INVALID_PHONE);
     }
     data['phone'] = phone;
   }
@@ -74,7 +69,7 @@ export async function main(ctx: FunctionContext) {
   // email
   if (phone && email != old.email) {
     if (!EMAIL.test(email)) {
-      return { code: 1001, message: "邮箱地址格式不正确" };
+      return fail(INVALID_EMAIL);
     }
     data['email'] = phone;
   }
@@ -87,8 +82,5 @@ export async function main(ctx: FunctionContext) {
       updated_at: Date.now(),
     });
 
-  return {
-    code: 0,
-    result: { ...r, _id },
-  };
+  return ok({ ...r, _id });
 }

@@ -29,7 +29,9 @@ const my_headers = [
   "upgrade-insecure-requests",
   "sec-fetch-user",
   "cookie",
-  "content-length"
+  "content-length",
+  "sec-purpose",
+  "prefetch"
 ];
 
 export default function filter_headers(headers) {

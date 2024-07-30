@@ -57,7 +57,13 @@ export interface RequestOptions {
   withToken?: boolean;
 }
 
-export interface Result<T = any> {
+export interface ApiResult<T = any> {
+  code: number;
+  msg: string;
+  data?: T;
+}
+
+export interface CmsResult<T = any> {
   code: number;
   type?: 'success' | 'error' | 'warning';
   message: string;

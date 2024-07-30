@@ -50,3 +50,15 @@ export function deleteContent({ schemaId, _id }) {
     data: { schemaId, _id },
   });
 }
+
+export function enableContent(schemaId, _id, enable: Boolean) {
+  return http.request({
+    url: '/cms/content/enable',
+    method: 'POST',
+    data: {
+      schemaId,
+      _id,
+      status: enable ? 1 : 0,
+    },
+  });
+}

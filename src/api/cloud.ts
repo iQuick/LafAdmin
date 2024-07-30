@@ -1,20 +1,20 @@
-import { S3, PutObjectCommand } from '@aws-sdk/client-s3';
-import { Cloud } from 'laf-client-sdk';
+import { S3 } from '@aws-sdk/client-s3';
+import { Upload, Progress } from '@aws-sdk/lib-storage';
 import { nanoid } from 'nanoid';
-import { logger } from '@/utils/Logger';
+
+import { getSts } from '@/api/cms/oss';
+import { createUploadRecord } from '@/api/cms/oss-manager';
 
 const APPID = import.meta.env.VITE_APPID;
-const LAF_URL = import.meta.env.VITE_GLOB_LAF_URL;
 const bucket = `${APPID}-public`;
 
-const cloud = new Cloud({
-  baseUrl: LAF_URL,
-  getAccessToken: () => localStorage.getItem('access_token') || '',
-});
-
 // 上传图片
-const uploadFile = async (file: File, dir = '') => {
-  const { credentials, endpoint, region } = await cloud.invokeFunction('oss/sts/get', {});
+const uploadFile = async (
+  file: File,
+  dir = '',
+  progressCallback?: ((progress: number) => void) | null
+) => {
+  const { credentials, endpoint, region } = await getSts();
 
   const s3 = new S3({
     endpoint: endpoint,
@@ -29,15 +29,37 @@ const uploadFile = async (file: File, dir = '') => {
   });
 
   const key = `resource/${dir ? dir : 'admin'}/${nanoid(6)}_${file.name}`;
-  const cmd = new PutObjectCommand({
-    Bucket: bucket,
-    Key: key,
-    Body: file,
-    ContentType: file.type,
+  const upload = new Upload({
+    client: s3,
+    params: {
+      Bucket: bucket,
+      Key: key,
+      Body: file,
+      ContentType: file.type,
+    },
+    leavePartsOnError: false, // 可选参数，上传错误时是否保留已上传的部分
   });
-  const res = await s3.send(cmd);
-  logger.log(res);
+
+  upload.on('httpUploadProgress', (progress: Progress) => {
+    if (progressCallback && progress.loaded && progress.total) {
+      progressCallback(progress.loaded / progress.total);
+    }
+  });
+
+  await upload.done();
   const url = `${endpoint}/${bucket}/${key}`;
+
+  // console.log('upload', file);
+  // console.log(await db.collection('device').getOne());
+
+  await createUploadRecord({
+    key: key,
+    filename: file.name,
+    originalname: file.name,
+    mimetype: file.type,
+    url: url,
+    finished: true,
+  });
 
   return { url, key };
 };

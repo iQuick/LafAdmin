@@ -32,7 +32,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: '管理员列表',
           activeMenu: 'Admin',
-          permissions: ['admin.read'],
+          permissions: ['pms.menu.admin'],
         },
         component: () => import('@/views/system/admin/index.vue'),
       },
@@ -42,7 +42,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: '角色列表',
           activeMenu: 'Role',
-          permissions: ['role.read'],
+          permissions: ['pms.menu.role'],
         },
         component: () => import('@/views/system/role/index.vue'),
       },
@@ -52,7 +52,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: '权限列表',
           activeMenu: 'Permission',
-          permissions: ['permission.read'],
+          permissions: ['pms.menu.permission'],
         },
         component: () => import('@/views/system/permission/index.vue'),
       },
@@ -62,7 +62,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: '资源管理',
           activeMenu: 'OSS',
-          permissions: ['oss.manager'],
+          permissions: ['pms.menu.oss.manager'],
         },
         component: () => import('@/views/system/oss/index.vue'),
       },
@@ -72,7 +72,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: '系统设置',
           activeMenu: 'setting-system',
-          permissions: ['system.setting'],
+          permissions: ['pms.menu.system.setting'],
         },
         component: () => import('@/views/setting/system/system.vue'),
       },

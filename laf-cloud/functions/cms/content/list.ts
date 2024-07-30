@@ -1,31 +1,40 @@
 import cloud from '@lafjs/cloud';
+import { ok, fail } from '@/system/call';
+import { checkPermission, checkToken } from '@/system/sys';
+import { INVALID_SCHEMA, PARAMS_EMPTY } from '@/system/fail';
 
 const db = cloud.database();
 
-
 export async function main(ctx: FunctionContext) {
-  // body, query 为请求参数, auth 是授权对象
-  const { body, headers } = ctx;
-  let { schemaId, page, pageSize, filters } = body;
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
+  }
 
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) return { code: '401', error: '未授权访问' };
+  // body, query 为请求参数, auth 是授权对象
+  const { schemaId, page, pageSize, filters } = ctx.body;
+  if (!schemaId || !page || !pageSize) {
+    return fail(PARAMS_EMPTY);
+  }
 
   // get schema
-  const { data: schema } = await db.collection('schema').where(
-    db.command.or({ _id: schemaId }, { collectionName: schemaId })
-  ).getOne();
+  const { data: schema } = await db
+    .collection('schema')
+    .where(db.command.or({ _id: schemaId }, { collectionName: schemaId }))
+    .getOne();
+  if (!schema) {
+    return fail(INVALID_SCHEMA);
+  }
 
-  if (!schema) return 'Schema is not exit';
+  // check permission
+  const pms = await checkPermission(token.uid, `content.${schema.collectionName}.read`);
+  if (pms.code !== 0) {
+    return fail(pms);
+  }
 
   const collection = schema.collectionName;
-
   const { total } = await db.collection(collection).count();
-
   const skip = page === 0 ? 0 : page - 1;
-
   const relations = [];
   for (const field of schema.fields) {
     if (field.type == 'Connect') {
@@ -43,7 +52,7 @@ export async function main(ctx: FunctionContext) {
     if (filters[key]) {
       try {
         where[key] = new RegExp(`${filters[key]}`);
-      } catch (err) { }
+      } catch (err) {}
     }
   }
 
@@ -57,13 +66,10 @@ export async function main(ctx: FunctionContext) {
   }
   const r = await query.get();
 
-  return {
-    code: 0,
-    result: {
-      list: r.data,
-      page,
-      pageSize,
-      pageCount: Math.ceil(total / pageSize),
-    },
-  };
+  return ok({
+    list: r.data,
+    page,
+    pageSize,
+    pageCount: Math.ceil(total / pageSize),
+  });
 }

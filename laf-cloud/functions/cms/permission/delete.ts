@@ -1,39 +1,36 @@
 import cloud from '@lafjs/cloud';
+import { ok, fail } from '@/system/call';
+import { checkToken, checkPermission } from '@/system/sys';
+import { INVALID_PERMISSION, PARAMS_EMPTY } from '@/system/fail';
 
 const db = cloud.database();
-const checkPermission = cloud.shared.get('checkPermission');
 
 export async function main(ctx: FunctionContext) {
-  // body, query 为请求参数, auth 是授权对象
-  const { body } = ctx;
-  const token = ctx.headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) return { code: 'NO_AUTH', error: 'permission denied' };
-
-  // checkPermission
-  const code = await checkPermission(uid, 'role.delete');
-  if (code) {
-    return 'Permission denied';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
-  const { _id } = body;
+  // check permission
+  const pms = await checkPermission(token.uid, 'permission.delete');
+  if (pms.code !== 0) {
+    return fail(pms);
+  }
+
+  // body, query 为请求参数, auth 是授权对象
+  const { _id } = ctx.body;
   if (!_id) {
-    return { code: 'INVALID_PARAM', error: 'id cannot be empty' };
+    return fail(PARAMS_EMPTY);
   }
 
   // check id
-  const { data: permission } = await db.collection('permission').where({ _id }).getOne();
-  if (!permission) {
-    return { code: 'INVALID_PARAM', error: 'not exists' };
+  const data = await db.collection('permission').where({ _id }).getOne();
+  if (!data) {
+    return fail(INVALID_PERMISSION);
   }
 
   // 数据库操作
   const r = await db.collection('permission').doc(_id).remove();
-  console.log(r);
 
-  return {
-    code: 0,
-    result: r,
-  };
+  return ok(r);
 }

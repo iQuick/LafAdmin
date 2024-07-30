@@ -1,31 +1,35 @@
 import cloud from '@lafjs/cloud';
-import { EMAIL } from '@/regex';
+import { ok, fail } from '@/system/call';
+import { checkToken, checkPermission } from '@/system/sys';
+import {
+  INVALID_EMAIL,
+  INVALID_SETTING,
+  PARAMS_EMPTY_SITE_LOGO,
+  PARAMS_EMPTY_SITE_NAME,
+} from '@/system/fail';
+import { EMAIL } from '@/utils/regex';
 
 const db = cloud.database();
-const checkPermission = cloud.shared.get('checkPermission');
 
 export default async function (ctx: FunctionContext) {
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
+  }
 
-  const { body } = ctx;
-  const token = ctx.headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) return { code: 'NO_AUTH', error: 'permission denied' };
-
-  // check permission
-  const code = await checkPermission(uid, 'system.setting.edit');
-  if (code) {
-    return 'Permission denied';
+  const pms = await checkPermission(token.uid, 'system.setting.edit');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   const { key } = ctx.body;
   if (key === 'basic') {
     const { name, logo, icpCode, mobile, address, loginCode, systemOpen, closeText } = ctx.body;
     if (!name) {
-      return { code: 1001, result: "网站名称不能为空" };
+      return fail(PARAMS_EMPTY_SITE_NAME);
     }
     if (!logo) {
-      return { code: 1001, result: "网站Logo不能为空" };
+      return fail(PARAMS_EMPTY_SITE_LOGO);
     }
     const data = { name, logo, updated_at: Date.now() };
     if (icpCode) {
@@ -54,7 +58,7 @@ export default async function (ctx: FunctionContext) {
     const data = { updated_at: Date.now() };
     if (emailAddr) {
       if (!EMAIL.test(emailAddr)) {
-        return { code: 1101, message: "请输入正确的邮箱地址" };
+        return fail(INVALID_EMAIL);
       }
       data['emailAddr'] = emailAddr;
     }
@@ -72,7 +76,7 @@ export default async function (ctx: FunctionContext) {
     }
 
     const result = await db.collection('setting').where({ key }).update(data);
-    return { code: 0, result };
+    return ok(result);
   }
-  return { code: 1000, result: "设置不存在" };
+  return fail(INVALID_SETTING);
 }

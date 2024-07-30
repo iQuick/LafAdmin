@@ -1,13 +1,20 @@
 import { defineStore } from 'pinia';
 import { createStorage } from '@/utils/Storage';
 import { store } from '@/store';
-import { ACCESS_TOKEN, CURRENT_USER, IS_LOCKSCREEN, USER_INFO } from '@/store/mutation-types';
+import {
+  ACCESS_TOKEN,
+  CURRENT_USER,
+  IS_LOCKSCREEN,
+  SCHEMA_INFO,
+  USER_INFO,
+} from '@/store/mutation-types';
 // import { ResultEnum } from '@/enums/httpEnum';
 
 const Storage = createStorage({ storage: localStorage });
 import { getUserInfo, login } from '@/api/cms/admin';
 import { storage } from '@/utils/Storage';
 import { logger } from '@/utils/Logger';
+import { getSchemaAll } from '@/api/cms/schema';
 
 export interface IUserState {
   token: string;
@@ -15,6 +22,7 @@ export interface IUserState {
   welcome: string;
   avatar: string;
   permissions: any[];
+  schemas: any[];
   info: any;
 }
 
@@ -26,6 +34,7 @@ export const useUserStore = defineStore({
     welcome: '',
     avatar: '',
     permissions: [],
+    schemas: [],
     info: Storage.get(CURRENT_USER, {}),
   }),
   getters: {
@@ -40,6 +49,9 @@ export const useUserStore = defineStore({
     },
     getPermissions(): [any][] {
       return this.permissions;
+    },
+    getSchemas(): [any][] {
+      return this.schemas;
     },
     getUserInfo(): object {
       return this.info;
@@ -58,6 +70,9 @@ export const useUserStore = defineStore({
     setUserInfo(info) {
       this.info = info;
     },
+    setSchemas(schemas) {
+      this.schemas = schemas;
+    },
     // 登录
     async login(userInfo) {
       try {
@@ -72,6 +87,17 @@ export const useUserStore = defineStore({
           this.setUserInfo(data);
         }
         return Promise.resolve(response);
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    },
+
+    async GetSchema() {
+      try {
+        const result = await getSchemaAll();
+        this.setSchemas(result);
+        storage.set(SCHEMA_INFO, result);
+        return Promise.resolve(result);
       } catch (e) {
         return Promise.reject(e);
       }

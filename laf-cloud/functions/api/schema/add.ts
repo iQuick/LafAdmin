@@ -1,5 +1,5 @@
 import cloud from '@lafjs/cloud'
-import * as call from '@/system/call'
+import { ok, fail } from '@/system/call'
 
 const db = cloud.database();
 
@@ -27,6 +27,7 @@ export default async function (ctx: FunctionContext) {
       }
     }
   });
-  const res = await db.collection(collection).add(data);
-  return call.ok(res);
+  
+  await db.collection(collection).add(data);
+  return ok();
 }

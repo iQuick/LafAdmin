@@ -2,4 +2,5 @@ name: api/oss/get-upload-link
 desc: ""
 methods:
   - POST
+  - GET
 tags: []

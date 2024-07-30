@@ -1,25 +1,26 @@
 import cloud from '@lafjs/cloud';
+import { checkPermission, checkToken, getPermissions } from '@/system/sys';
+import { ok, fail } from '@/system/call';
 
 const db = cloud.database();
-const getPermissions = cloud.shared.get('getPermissions');
 
 export async function main(ctx: FunctionContext) {
-  // check permission
-  const token = ctx.headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) return { code: 'NO_AUTH', error: 'permission denied' };
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
+  }
 
-  const { data: admin } = await db.collection('admin').where({ _id: uid }).getOne();
+  // check permission
+  const pms = await checkPermission(token.uid, 'admin.read');
+  if (pms.code !== 0) {
+    return fail(pms);
+  }
+
+  const _id = token.uid;
+  const { data: admin } = await db.collection('admin').doc(_id).get();
 
   delete admin['password'];
   const { permissions } = await getPermissions(admin._id);
 
-  return {
-    code: 0,
-    result: {
-      ...admin,
-      permissions,
-    },
-  };
+  return ok({ ...admin, permissions });
 }

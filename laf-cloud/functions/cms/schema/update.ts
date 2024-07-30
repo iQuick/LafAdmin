@@ -1,109 +1,55 @@
 import cloud from '@lafjs/cloud';
+import { updateSchema } from '@/system/schema';
+import { ok, fail } from '@/system/call';
+import { FAIL_SCHEMA_UPDATE } from '@/system/fail';
+import { checkToken, checkPermission, WHITE_COLLECTION_LIST } from '@/system/sys';
+import { INVALID_COLLECTION_NAME, INVALID_SCHEMA, PARAMS_EMPTY } from '@/system/fail';
 
 const db = cloud.database();
 const mongodb = cloud.mongo.db;
 
-const shared = cloud.shared;
-const checkPermission = shared.get('checkPermission');
-
 export async function main(ctx: FunctionContext) {
-  const { headers } = ctx;
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return 'Unauthorized';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
-  // check permission
-  const code = await checkPermission(uid, 'schema.edit');
-  if (code) {
-    return 'Permission denied';
+  const pms = await checkPermission(token.uid, 'schema.edit');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   const { _id, collectionName, fields, displayName, description } = ctx.body;
   if (!_id) {
-    return '_id cannot be empty';
+    return fail(PARAMS_EMPTY);
   }
 
   // check id
-  const { data: schema } = await db.collection('schema').where({ _id }).getOne();
+  const { data: schema } = await db.collection('schema').doc(_id).get();
   if (!schema) {
-    return { code: 'INVALID_PARAM', error: 'not exists' };
+    return fail(INVALID_SCHEMA);
   }
 
-  const { data: schemaApi } = await db.collection('schema-api').where({ 'collectionName': schema.collectionName }).getOne();
+  if (schema.collectionName && WHITE_COLLECTION_LIST.indexOf(schema.collectionName) > -1) {
+    return fail(INVALID_COLLECTION_NAME);
+  }
 
-  const sdata = { updated_at: Date.now() } as any;
-  const data = { updated_at: Date.now() } as any;
-
-  if (collectionName) {
-    // check collectionName
-    const whiteList = ['schema', 'admin', 'role', 'permission', 'password'];
-    if (whiteList.indexOf(collectionName) > -1) {
-      return 'collectionName cannot be ' + whiteList.join(', ');
+  const session = cloud.mongo.client.startSession();
+  try {
+    session.startTransaction();
+    await updateSchema(token.uid, schema, { collectionName, displayName, description, fields });
+    // 更新数据库名称
+    if (collectionName && collectionName !== schema.collectionName) {
+      await mongodb.renameCollection(schema.collectionName, collectionName);
     }
-
-    data.collectionName = collectionName;
-    sdata.collectionName = collectionName;
-    mongodb.renameCollection(schema.collectionName, collectionName);
+    await session.abortTransaction()
+    // await session.commitTransaction();
+    return ok('success');
+  } catch (err) {
+    await session.abortTransaction();
+    console.log('Error update schema : ', err)
+    return fail(FAIL_SCHEMA_UPDATE);
+  } finally {
+    await session.endSession();
   }
-
-  if (displayName) {
-    data.displayName = displayName;
-    sdata.displayName = displayName;
-  }
-
-  if (fields) {
-    data.fields = fields;
-
-    const addFiledBody = {};
-    const updateFiledBody = {};
-    fields
-      .filter((field) => {
-        return !(field.name == 'updated_at' || field.name == 'created_at');
-      })
-      .forEach((field) => {
-        addFiledBody[field.name] = `${field.displayName}(${field.isRequired ? '必须' : '可选'
-          } | ${field.type})`;
-        updateFiledBody[field.name] = `${field.displayName}(可选 | ${field.type})`;
-      });
-    sdata.apis = {
-      'add': { 'body': addFiledBody },
-      'update': { 'body': updateFiledBody },
-    }
-  }
-
-  if (description) {
-    data.description = description;
-  }
-
-
-  // update schema
-  if (sdata) {
-    const sapi = db.collection('schema-api').doc(schemaApi._id);
-    await sapi.update({
-      apis: {
-        "read": {
-          "body": db.command.remove(),
-        },
-        "add": {
-          "body": db.command.remove(),
-        },
-        "update": {
-          "body": db.command.remove(),
-        },
-        "remove": {
-          "body": db.command.remove(),
-        }
-      }
-    });
-    await sapi.update(sdata);
-  }
-  const r = await db.collection('schema').where({ _id }).update(data);
-
-  return {
-    code: 0,
-    result: r,
-  };
 }

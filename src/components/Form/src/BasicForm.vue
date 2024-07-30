@@ -296,15 +296,23 @@
       editorConfig.MENU_CONF['uploadImage'] = {
         // 自定义上传
         async customUpload(file: File, insertFn: InsertFnType) {
-          const { url } = await uploadFile(file, props['name']);
-          insertFn(url, "", "");
+          console.log('upload image');
+          const dt = await uploadFile(file, props['name'], (progress) => {
+            console.log('upload progress :', progress);
+          });
+          const { url } = dt;
+          insertFn(url, '', '');
         },
       };
       editorConfig.MENU_CONF['uploadVideo'] = {
         // 自定义上传
         async customUpload(file: File, insertFn: InsertFnType) {
-          const { url } = await uploadFile(file, props['name']);
-          insertFn(url, "");
+          console.log('upload video');
+          const dt = await uploadFile(file, props['name'], (progress) => {
+            console.log('upload progress :', progress);
+          });
+          const { url } = dt;
+          insertFn(url, '');
         },
       };
 

@@ -37,7 +37,7 @@
         :label-width="80"
         class="py-4"
       >
-        <n-form-item label="权限" path="name">
+        <n-form-item label="角色" path="name">
           <n-input placeholder="请输入权限" v-model:value="formParams.name" />
         </n-form-item>
         <n-form-item label="名称" path="label">
@@ -66,7 +66,7 @@
   import { h, reactive, ref, onMounted } from 'vue';
   import { useMessage } from 'naive-ui';
   import { BasicTable, TableAction } from '@/components/Table';
-  import { getRoles, createRole, deleteRole, updateRole } from '@/api/cms/role';
+  import { getRoles, createRole, deleteRole, updateRole, enableRole } from '@/api/cms/role';
   import { getAllPermissions } from '@/api/cms/permission';
   import { columns } from './columns';
   import { PlusOutlined } from '@vicons/antd';
@@ -125,14 +125,14 @@
             },
             // 根据业务控制是否显示 isShow 和 auth 是并且关系
             ifShow: () => {
-              return userPermissions.includes('role.delete');
+              return userPermissions.includes('pms.role.delete');
             },
           },
           {
             label: '编辑',
             onClick: handleEdit.bind(null, record),
             ifShow: () => {
-              return userPermissions.includes('role.edit');
+              return userPermissions.includes('pms.role.edit');
             },
           },
         ],
@@ -142,19 +142,26 @@
             key: 'enabled',
             // 根据业务控制是否显示: 非enable状态的不显示启用按钮
             ifShow: () => {
-              return true;
+              return !record.status && userPermissions.includes('pms.role.edit');
             },
           },
           {
             label: '禁用',
             key: 'disabled',
             ifShow: () => {
-              return true;
+              return record.status && userPermissions.includes('pms.role.edit');
             },
           },
         ],
         select: (key) => {
-          message.info(`您点击了，${key} 按钮`);
+          switch (key) {
+            case 'enabled':
+              handleEnable(record, true);
+              break;
+            case 'disabled':
+              handleEnable(record, false);
+              break;
+          }
         },
       });
     },
@@ -242,6 +249,16 @@
     await deleteRole(record._id);
 
     message.success('删除成功');
+    reloadTable();
+  }
+
+  async function handleEnable(record: TRole, enable: Boolean) {
+    await enableRole(record._id, enable);
+    if (enable) {
+      message.success('已启用');
+    } else {
+      message.success('已禁用');
+    }
     reloadTable();
   }
 </script>

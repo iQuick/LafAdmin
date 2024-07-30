@@ -63,6 +63,7 @@
     createPermission,
     deletePermission,
     updatePermission,
+    enablePermission,
   } from '@/api/cms/permission';
   import { columns } from './columns';
   import { PlusOutlined } from '@vicons/antd';
@@ -98,14 +99,14 @@
             },
             // 根据业务控制是否显示 isShow 和 auth 是并且关系
             ifShow: () => {
-              return userPermissions.includes('permission.delete');
+              return userPermissions.includes('pms.permission.delete');
             },
           },
           {
             label: '编辑',
             onClick: handleEdit.bind(null, record),
             ifShow: () => {
-              return userPermissions.includes('permission.edit');
+              return userPermissions.includes('pms.permission.edit');
             },
           },
         ],
@@ -113,21 +114,27 @@
           {
             label: '启用',
             key: 'enabled',
-            // 根据业务控制是否显示: 非enable状态的不显示启用按钮
             ifShow: () => {
-              return true;
+              return !record.status && userPermissions.includes('pms.permission.edit');
             },
           },
           {
             label: '禁用',
             key: 'disabled',
             ifShow: () => {
-              return true;
+              return record.status && userPermissions.includes('pms.permission.edit');
             },
           },
         ],
         select: (key) => {
-          message.info(`您点击了，${key} 按钮`);
+          switch (key) {
+            case 'enabled':
+              handleEnable(record, true);
+              break;
+            case 'disabled':
+              handleEnable(record, false);
+              break;
+          }
         },
       });
     },
@@ -212,6 +219,16 @@
     await deletePermission(record._id);
 
     message.success('删除成功');
+    reloadTable();
+  }
+
+  async function handleEnable(record: TPermission, enable: Boolean) {
+    await enablePermission(record._id, enable);
+    if (enable) {
+      message.success('已启用');
+    } else {
+      message.success('已禁用');
+    }
     reloadTable();
   }
 </script>

@@ -1,39 +1,36 @@
 import cloud from '@lafjs/cloud';
+import { ok, fail } from '@/system/call';
+import { checkPermission, checkToken } from '@/system/sys';
+import { INVALID_ADMIN, PARAMS_EMPTY } from '@/system/fail';
 
 const db = cloud.database();
-const checkPermission = cloud.shared.get('checkPermission');
 
 export async function main(ctx: FunctionContext) {
-  const { body } = ctx;
-  const token = ctx.headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) return { code: 'NO_AUTH', error: 'permission denied' };
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
+  }
 
   // check permission
-  const code = await checkPermission(uid, 'admin.delete');
-  if (code) {
-    return 'Permission denied';
+  const pms = await checkPermission(token.uid, 'admin.delete');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   // check params
-  const { _id } = body;
+  const { _id } = ctx.body;
   if (!_id) {
-    return { code: 'INVALID_PARAM', error: 'id cannot be empty' };
+    return fail(PARAMS_EMPTY);
   }
 
   // check id
   const { data: admin } = await db.collection('admin').where({ _id }).getOne();
   if (!admin) {
-    return { code: 'INVALID_PARAM', error: 'not exists' };
+    return fail(INVALID_ADMIN);
   }
 
   // delete
-  const r = await db.collection('admin').doc(_id).remove();
-  // console.log(r);
+  const rsp = await db.collection('admin').doc(_id).remove();
 
-  return {
-    code: 0,
-    result: r,
-  };
+  return ok(rsp);
 }

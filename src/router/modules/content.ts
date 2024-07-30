@@ -24,6 +24,7 @@ const routes: Array<RouteRecordRaw> = [
       title: '内容集合',
       icon: renderIcon(PartitionOutlined),
       sort: 3,
+      permissions: ['pms.menu.content'],
     },
     children: [
       {

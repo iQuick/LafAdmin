@@ -9,7 +9,11 @@
       :scroll-x="1090"
     >
       <template #tableTitle>
-        <n-button v-if="permissions.includes('user.create')" type="primary" @click="handleCreate">
+        <n-button
+          v-if="permissions.includes('pms.user.create')"
+          type="primary"
+          @click="handleCreate"
+        >
           <template #icon>
             <n-icon>
               <PlusOutlined />
@@ -131,6 +135,7 @@
     deleteUser,
     updateUser,
     resetPasswordUser,
+    enableUser,
   } from '@/api/cms/user';
   import { getAllRoles } from '@/api/cms/role';
   import { uploadFile } from '@/api/cloud';
@@ -195,14 +200,14 @@
             },
             // 根据业务控制是否显示 isShow 和 auth 是并且关系
             ifShow: () => {
-              return permissions.includes('admin.delete');
+              return permissions.includes('pms.user.delete');
             },
           },
           {
             label: '编辑',
             onClick: handleEdit.bind(null, record),
             ifShow: () => {
-              return permissions.includes('admin.edit');
+              return permissions.includes('pms.user.edit');
             },
           },
         ],
@@ -212,31 +217,37 @@
             key: 'enabled',
             // 根据业务控制是否显示: 非enable状态的不显示启用按钮
             ifShow: () => {
-              return true;
+              return !record.status && permissions.includes('pms.user.edit');
             },
           },
           {
             label: '禁用',
             key: 'disabled',
             ifShow: () => {
-              return true;
+              return record.status && permissions.includes('pms.user.edit');
             },
           },
           {
             label: '重置密码',
             key: 'reset',
             ifShow: () => {
-              return true;
+              return permissions.includes('pms.user.edit');
             },
           },
         ],
         select: (key) => {
-          if (key == 'reset') {
-            resetModal.value = true;
-            passwordParams._id = record._id;
-            passwordParams.username = record.username;
-          } else {
-            message.info(`您点击了，${key} 按钮`);
+          switch (key) {
+            case 'enabled':
+              handleEnable(record, true);
+              break;
+            case 'disabled':
+              handleEnable(record, false);
+              break;
+            case 'reset':
+              resetModal.value = true;
+              passwordParams._id = record._id;
+              passwordParams.username = record.username;
+              break;
           }
         },
       });
@@ -456,6 +467,16 @@
     await deleteUser(record._id);
 
     message.success('删除成功');
+    reloadTable();
+  }
+
+  async function handleEnable(record: TUser, enable: Boolean) {
+    await enableUser(record._id, enable);
+    if (enable) {
+      message.success('已启用');
+    } else {
+      message.success('已禁用');
+    }
     reloadTable();
   }
 </script>

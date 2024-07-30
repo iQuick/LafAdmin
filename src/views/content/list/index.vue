@@ -3,16 +3,25 @@
   import { useMessage } from 'naive-ui';
   import { BasicTable, TableAction } from '@/components/Table';
   import { getSchema } from '@/api/cms/schema';
-  import { getContents, deleteContent } from '@/api/cms/content';
+  import { getContents, deleteContent, enableContent } from '@/api/cms/content';
   import { PlusOutlined } from '@vicons/antd';
   import { useRoute, useRouter } from 'vue-router';
   import dayjs from 'dayjs';
   import { logger } from '@/utils/Logger';
+  import { useUserStoreWidthOut } from '@/store/modules/user';
 
   const route = useRoute();
   const schemaId = route.path.split('/').pop();
+  const schemaInfo = reactive({
+    create: false,
+    displayName: '',
+    collectionName: '',
+  });
   const router = useRouter();
   const message = useMessage();
+
+  const userStore = useUserStoreWidthOut();
+  const { permissions } = userStore;
 
   const searches = ref<
     {
@@ -36,6 +45,9 @@
 
   const getSchemaInfo = async () => {
     const res = await getSchema(schemaId);
+    schemaInfo.collectionName = res.collectionName;
+    schemaInfo.displayName = res.displayName;
+    schemaInfo.create = res.fields.filter((item) => !item.isHidden && !item.isSystem).length > 0;
     let fields: SchemaField[] = res.fields.filter((item) => !item.isHidden) || [];
     fields = [
       ...fields.filter((item) => !item.isSystem),
@@ -67,15 +79,15 @@
           if (item.type === 'DateTime') {
             return 100;
           }
-          return 150;
+          return 200;
         })(),
         render(row) {
+          if (item.name === 'status') {
+            return row[item.name]
+              ? h('p', { class: 'item-enable' }, '启用')
+              : h('p', { class: 'item-disenable' }, '禁用');
+          }
           if (item.type === 'Boolean') {
-            if (item.name === 'status') {
-              return row[item.name]
-                ? h('p', { class: 'item-enable' }, '启用')
-                : h('p', { class: 'item-disenable' }, '禁用');
-            }
             return row[item.name] ? '是' : '否';
           }
           if (item.type === 'Array') {
@@ -122,7 +134,6 @@
         },
       };
     });
-    logger.log(columns.value);
     displayName.value = res.displayName;
   };
 
@@ -144,6 +155,9 @@
             label: '编辑',
             type: 'primary',
             onClick: handleEdit.bind(null, record),
+            ifShow: () => {
+              return permissions.includes(`pms.content.${schemaInfo.collectionName}.edit`);
+            },
           },
           {
             label: '删除',
@@ -152,10 +166,36 @@
               title: '确定删除吗？',
               confirm: handleDelete.bind(null, record),
             },
+            ifShow: () => {
+              return permissions.includes(`pms.content.${schemaInfo.collectionName}.edit`);
+            },
+          },
+        ],
+        dropDownActions: [
+          {
+            label: '启用',
+            key: 'enabled',
+            ifShow: () => {
+              return !record.status && permissions.includes(`pms.content.${schemaInfo.collectionName}.edit`);
+            },
+          },
+          {
+            label: '禁用',
+            key: 'disabled',
+            ifShow: () => {
+              return record.status && permissions.includes(`pms.content.${schemaInfo.collectionName}.edit`);
+            },
           },
         ],
         select: (key) => {
-          message.info(`您点击了，${key} 按钮`);
+          switch (key) {
+            case 'enabled':
+              handleEnable(record, true);
+              break;
+            case 'disabled':
+              handleEnable(record, false);
+              break;
+          }
         },
       });
     },
@@ -213,6 +253,16 @@
     message.success('删除成功');
     reloadTable();
   }
+
+  async function handleEnable(record, enable: Boolean) {
+    await enableContent(schemaId, record._id, enable);
+    if (enable) {
+      message.success('已启用');
+    } else {
+      message.success('已禁用');
+    }
+    reloadTable();
+  }
 </script>
 
 <template>
@@ -227,7 +277,7 @@
     >
       <template #tableTitle>
         <div class="table_head">
-          <n-button class="add" type="primary" @click="handleCreate">
+          <n-button v-if="schemaInfo.create" class="add" type="primary" @click="handleCreate">
             <template #icon>
               <n-icon>
                 <PlusOutlined />

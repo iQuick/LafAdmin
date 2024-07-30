@@ -41,3 +41,14 @@ export function deleteRole(id) {
     },
   });
 }
+
+export function enableRole(_id, enable: Boolean) {
+  return http.request({
+    url: '/cms/role/enable',
+    method: 'POST',
+    data: {
+      _id,
+      status: enable ? 1 : 0,
+    },
+  });
+}

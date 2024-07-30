@@ -1,4 +1,4 @@
-import { http } from '@/utils/http/axios';
+import {http} from '@/utils/http/axios';
 import {BasicPageParams, BasicResponseModel} from '@/api/been/basic';
 
 /**
@@ -116,5 +116,21 @@ export function resetPasswordAdmin(params) {
     url: '/cms/admin/resetpassword',
     method: 'POST',
     params,
+  });
+}
+
+/**
+ * 启用/禁用
+ * @param _id
+ * @param enable
+ */
+export function enableAdmin(_id, enable: Boolean) {
+  return http.request({
+    url: '/cms/admin/enable',
+    method: 'POST',
+    data: {
+      _id,
+      status: enable ? 1 : 0,
+    },
   });
 }

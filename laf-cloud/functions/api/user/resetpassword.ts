@@ -1,19 +1,25 @@
-import cloud from '@lafjs/cloud'
-import * as call from '@/system/call'
+import cloud from '@lafjs/cloud';
+import { clearUserToken } from '@/system/token';
+import { ok, fail } from '@/system/call';
+import { hashPassword } from '@/system/sys';
+import {
+  PASSWD_OLD_INACCURACY,
+  PASSWD_OR_NEWPASSWD_ACCORD,
+  PASSWD_OR_NEWPASSWD_EMPTY,
+} from '@/system/fail';
 
 const db = cloud.database();
-const hashPassword = cloud.shared.get('hashPassword');
 
 export default async function (ctx: FunctionContext) {
   const { uid } = ctx.headers;
   const { oldpassword, newpassword } = ctx.body;
 
   if (!oldpassword || !newpassword) {
-    return call.FAIL_PASSWD_OR_NEWPASSWD_EMPTY;
+    return fail(PASSWD_OR_NEWPASSWD_EMPTY);
   }
 
   if (oldpassword === newpassword) {
-    return call.FAIL_PASSWD_OR_NEWPASSWD_ACCORD;
+    return fail(PASSWD_OR_NEWPASSWD_ACCORD);
   }
 
   const inactive = await db
@@ -25,7 +31,7 @@ export default async function (ctx: FunctionContext) {
     });
 
   if (inactive.updated == 0) {
-    return call.FAIL_OLDPASSWD_INACCURACY;
+    return fail(PASSWD_OLD_INACCURACY);
   }
 
   await db.collection('password').add({
@@ -37,29 +43,8 @@ export default async function (ctx: FunctionContext) {
     updated_at: Date.now(),
   });
 
+  // 清理旧 token
+  await clearUserToken(uid);
 
-  // 更新 token
-  const expire = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7;
-  const payload = {
-    uid: uid,
-    type: 'user',
-    exp: expire,
-  };
-
-  const access_token = cloud.getToken(payload);
-
-  await db.collection('user-token').add({
-    uid: uid,
-    token: access_token,
-    expired_at: expire * 1000,
-    created_at: Date.now(),
-    updated_at: Date.now()
-  });
-
-  return call.ok({
-    access_token,
-    uid: uid,
-    expire,
-  });
-
+  return ok();
 }

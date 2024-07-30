@@ -6,7 +6,7 @@
     :date-locale="dateZhCN"
   >
     <AppProvider>
-      <RouterView />
+      <RouterView v-if="showPage" />
     </AppProvider>
   </NConfigProvider>
 
@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue';
+  import { computed, provide, ref } from 'vue';
   import { zhCN, dateZhCN, darkTheme } from 'naive-ui';
   // import { LockScreen } from '@/components/Lockscreen';
   import { AppProvider } from '@/components/Application';
@@ -30,6 +30,16 @@
   const designStore = useDesignSettingStore();
   // const isLock = computed(() => useLockscreen.isLock);
   // const lockTime = computed(() => useLockscreen.lockTime);
+
+  const showPage = ref(true);
+  const reloadPage = () => {
+    showPage.value = false;
+    setTimeout(() => {
+      showPage.value = true;
+    }, 0);
+  };
+
+  provide('reloadPage', reloadPage);
 
   /**
    * @type import('naive-ui').GlobalThemeOverrides

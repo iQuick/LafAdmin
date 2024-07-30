@@ -1,6 +1,4 @@
 name: system/types
 desc: ""
-methods:
-  - GET
-  - POST
+methods: []
 tags: []

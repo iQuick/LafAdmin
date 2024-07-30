@@ -1,21 +1,25 @@
-
-import cloud from '@lafjs/cloud'
+import cloud from '@lafjs/cloud';
+import { ok, fail } from '@/system/call';
+import { checkPermission, checkToken } from '@/system/sys';
 
 const db = cloud.database();
 
 export default async function (ctx: FunctionContext) {
-  const token = ctx.headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return { code: 'NO_AUTH', error: 'permission denied' }
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
+  }
+
+  const pms = await checkPermission(token.uid, 'schema.api.read');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   const { collectionName } = ctx.body;
-  const { data:api } = await db.collection('schema-api').where({ collectionName: collectionName }).getOne();
+  const { data: api } = await db
+    .collection('schema-api')
+    .where({ collectionName: collectionName })
+    .getOne();
 
-  return {
-    code: 0,
-    result: api,
-  };
+  return ok(api);
 }

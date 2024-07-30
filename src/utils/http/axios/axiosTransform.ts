@@ -2,7 +2,7 @@
  * 数据处理类，可以根据项目自行配置
  */
 import type { AxiosRequestConfig, AxiosResponse } from 'axios';
-import type { RequestOptions, Result } from './types';
+import type { RequestOptions, ApiResult } from './types';
 
 export interface CreateAxiosOptions extends AxiosRequestConfig {
   authenticationScheme?: string;
@@ -20,7 +20,7 @@ export abstract class AxiosTransform {
   /**
    * @description: 请求成功处理
    */
-  transformRequestData?: (res: AxiosResponse<Result>, options: RequestOptions) => any;
+  transformRequestData?: (res: AxiosResponse<ApiResult>, options: RequestOptions) => any;
 
   /**
    * @description: 请求失败处理

@@ -1,33 +1,27 @@
 import cloud from '@lafjs/cloud';
+import { checkPermission, checkToken, hashPassword } from '@/system/sys';
+import { ok, fail } from '@/system/call';
+import { PARAMS_EMPTY } from '@/system/fail';
 
 const db = cloud.database();
-const checkPermission = cloud.shared.get('checkPermission');
-const hashPassword = cloud.shared.get('hashPassword');
 
 export async function main(ctx: FunctionContext) {
-
-  const { headers } = ctx;
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return 'Unauthorized';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
-  // 权限验证
-  const code = await checkPermission(uid, 'admin.edit');
-  if (code) {
-    return { code: '403', error: 'Permission denied' };
+  // check permission
+  const pms = await checkPermission(token.uid, 'admin.edit');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   const { _id, username, password } = ctx.body;
 
-
-  if (!username || !password)
-    return {
-      code: 'INVALID_PARAM',
-      error: 'id and username and password and newpassword not be empty',
-    };
+  if (!username || !password) {
+    return fail(PARAMS_EMPTY);
+  }
 
   const { data: admin } = await db
     .collection('admin')
@@ -58,8 +52,5 @@ export async function main(ctx: FunctionContext) {
     updated_at: Date.now(),
   });
 
-  return {
-    code: 0,
-    result: 'success',
-  };
+  return ok('success');
 }

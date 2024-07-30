@@ -1,35 +1,32 @@
 import cloud from '@lafjs/cloud';
-const db = cloud.database();
-const shared = cloud.shared;
+import { ok, fail } from '@/system/call';
+import { checkPermission, checkToken, hashPassword } from '@/system/sys';
+import { ACCOUNT_ALREADY_EXIST, INVALID_ADMIN, INVALID_ROLE, PARAMS_EMPTY } from '@/system/fail';
 
-const checkPermission = shared.get('checkPermission');
-const hashPassword = shared.get('hashPassword');
+const db = cloud.database();
 
 export async function main(ctx: FunctionContext) {
-  const { headers } = ctx;
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return 'Unauthorized';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
-  // 权限验证
-  const code = await checkPermission(uid, 'admin.edit');
-  if (code) {
-    return { code: '403', error: 'Permission denied' };
+  // check permission
+  const pms = await checkPermission(token.uid, 'admin.edit');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   // 参数验证
   const { _id, username, password, avatar, name, roles } = ctx.body;
   if (!_id) {
-    return { code: 'INVALID_PARAM', error: 'admin id cannot be empty' };
+    return fail(PARAMS_EMPTY);
   }
 
   // 验证 user _id 是否合法
   const { data: admin } = await db.collection('admin').where({ _id: _id }).getOne();
   if (!admin) {
-    return { code: 'INVALID_PARAM', error: 'user not exists' };
+    return fail(INVALID_ADMIN);
   }
 
   // 验证 roles 是否合法
@@ -41,7 +38,7 @@ export async function main(ctx: FunctionContext) {
     .count();
 
   if (valid_count !== roles.length) {
-    return { code: 'INVALID_PARAM', error: 'invalid roles' };
+    return fail(INVALID_ROLE);
   }
 
   const old = admin;
@@ -57,7 +54,9 @@ export async function main(ctx: FunctionContext) {
   // username
   if (username && username != old.username) {
     const { total } = await db.collection('admin').where({ username }).count();
-    if (total) return { code: 'INVALID_PARAM', error: 'username already exists' };
+    if (total) {
+      return fail(ACCOUNT_ALREADY_EXIST);
+    }
     data['username'] = username;
   }
 
@@ -76,7 +75,7 @@ export async function main(ctx: FunctionContext) {
     data['roles'] = roles;
   }
 
-  const r = await db
+  const rsp = await db
     .collection('admin')
     .where({ _id: _id })
     .update({
@@ -84,8 +83,8 @@ export async function main(ctx: FunctionContext) {
       updated_at: Date.now(),
     });
 
-  return {
-    code: 0,
-    result: { ...r, _id },
-  };
+  return ok({
+    _id,
+    ...rsp,
+  });
 }

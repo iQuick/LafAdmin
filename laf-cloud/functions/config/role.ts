@@ -3,10 +3,11 @@ import * as assert from 'assert';
 
 
 const db = cloud.database();
+const mongo = cloud.mongo.db;
 
 export default async function configRole() {
   try {
-    await cloud.mongo.db.collection('role').createIndex('name', { unique: true });
+    await mongo.collection('role').createIndex('name', { unique: true });
     const r_perm = await db.collection('permission').get();
     assert.ok(r_perm, 'get permissions failed');
 

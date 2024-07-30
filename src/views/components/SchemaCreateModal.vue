@@ -2,14 +2,13 @@
   import { useMessage } from 'naive-ui';
   import { reactive, ref, toRefs, watch } from 'vue';
   import { createSchema, updateSchema } from '@/api/cms/schema';
-  import { createSchemaApi } from '@/api/cms/schema-api';
 
   const props = defineProps<{
     modelValue: boolean;
     modalType: 'create' | 'edit';
     currentSchema: Schema | undefined;
   }>();
-  const emit = defineEmits(['closeModal', 'fetchSchemaList']);
+  const emit = defineEmits(['closeModal', 'fetchSchemaList', 'created']);
 
   const { modelValue, modalType, currentSchema } = toRefs(props);
 
@@ -17,7 +16,11 @@
     emit('closeModal');
   };
 
-  const handeleFetchSchemaList = () => {
+  const handleCreated = () => {
+    emit('created');
+  };
+
+  const handleFetchSchemaList = () => {
     emit('fetchSchemaList');
   };
 
@@ -70,17 +73,18 @@
       if (!errors) {
         if (modalType.value === 'create') {
           await createSchema(formParams);
-          await createSchemaApi({
-            collectionName: formParams.collectionName,
-            displayName: formParams.displayName,
-          });
+          // await createSchemaApi({
+          //   collectionName: formParams.collectionName,
+          //   displayName: formParams.displayName,
+          // });
         } else {
           await updateSchema({ ...formParams, _id: currentSchema.value?._id });
         }
 
         message.success(modalType.value === 'create' ? '创建成功' : '修改成功');
         handleClose();
-        handeleFetchSchemaList();
+        handleFetchSchemaList();
+        handleCreated();
         resetFormParams();
       } else {
         message.error('请填写完整信息');

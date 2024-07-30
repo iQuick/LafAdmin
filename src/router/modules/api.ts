@@ -23,7 +23,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: 'Api接口',
       icon: renderIcon(ApiOutlined),
-      permissions: ['schema.api'],
+      permissions: ['pms.menu.schema.api'],
       sort: 2,
     },
     children: [

@@ -1,6 +1,0 @@
-name: cms/oss/delete
-desc: ""
-methods:
-  - GET
-  - POST
-tags: []

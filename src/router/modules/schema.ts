@@ -23,7 +23,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: '内容模型',
       icon: renderIcon(AppstoreAddOutlined),
-      permissions: ['schema'],
+      permissions: ['pms.menu.schema'],
       sort: 1,
     },
     children: [

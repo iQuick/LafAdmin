@@ -27,7 +27,7 @@ export const columns = [
   {
     title: '角色',
     key: 'roles',
-    width: 200,
+    width: 80,
     render(row) {
       return row.roles.map((item) => item).join(',');
     },
@@ -35,7 +35,7 @@ export const columns = [
   {
     title: '状态',
     key: 'status',
-    width: 140,
+    width: 40,
     render(row) {
       return row.status
         ? h('p', { class: 'item-enable' }, '启用')
@@ -45,9 +45,17 @@ export const columns = [
   {
     title: '创建时间',
     key: 'created_at',
-    width: 200,
+    width: 100,
     render(row) {
       return dayjs(row.created_at).format('YYYY-MM-DD HH:mm');
+    },
+  },
+  {
+    title: '更新时间',
+    key: 'updated_at',
+    width: 100,
+    render(row) {
+      return dayjs(row.updated_at).format('YYYY-MM-DD HH:mm');
     },
   },
 ];

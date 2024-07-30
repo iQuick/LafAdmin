@@ -27,21 +27,21 @@ export const middlewares = (ms: Middleware[]) => {
  * 打印日志
  */
 export const logger: Middleware = async (ctx, next) => {
+  const { url, query, method } = ctx.request;
+  const ip = ctx.headers['x-real-ip'] ? ctx.headers['x-real-ip'] : ctx.headers['x-forwarded-for']
   const data = {
-    url: ctx.request.url,
-    ip: ctx.headers['x-forwarded-for']
+    ip,
+    url,
+    method
   };
   const headers = filter_headers(ctx.headers)
   if (headers) {
     data["headers"] = headers;
   }
-  if (ctx.params && ctx.params.length > 0) {
-    data['params'] = ctx.params;
-  }
-  if (ctx.body && ctx.body.length > 0) {
-    data['body'] = ctx.body;
-  }
-  console.log(JSON.stringify(data));
+  data['query'] = query;
+  data['params'] = ctx.params;
+  data['body'] = ctx.body;
+  console.debug(JSON.stringify(data));
   next();
 }
 
@@ -49,6 +49,7 @@ export const logger: Middleware = async (ctx, next) => {
  * 记录请求信息
  */
 export const record: Middleware = async (ctx, next) => {
+  const { url, query, method } = ctx.request;
   const requestId = ctx.requestId
   const ip = ctx.headers['x-real-ip'] ? ctx.headers['x-real-ip'] : ctx.headers['x-forwarded-for']
   const region = rip(ip)
@@ -56,8 +57,10 @@ export const record: Middleware = async (ctx, next) => {
   const referer = ctx.headers['referer']
   const userAgent = ctx.headers['user-agent']
   const data = {
-    requestId,
     ip,
+    requestId,
+    url, 
+    method,
     referer,
     userAgent,
     func,
@@ -69,12 +72,9 @@ export const record: Middleware = async (ctx, next) => {
   if (headers) {
     data["headers"] = headers;
   }
-  if (ctx.params && ctx.params.length > 0) {
-    data['params'] = ctx.params;
-  }
-  if (ctx.body && ctx.body.length > 0) {
-    data['body'] = ctx.body;
-  }
+  data['query'] = query;
+  data['params'] = ctx.params;
+  data['body'] = ctx.body;
   db.collection("request-record").add(data)
   next();
 }

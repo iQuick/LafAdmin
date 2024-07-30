@@ -38,9 +38,9 @@
     };
 
     await deleteSchema(params);
-    await deleteSchemaApi({
-      collectionName: currentSchema.value?.collectionName,
-    });
+    // await deleteSchemaApi({
+    //   collectionName: currentSchema.value?.collectionName,
+    // });
 
     formBtnLoading.value = false;
     message.success('删除成功');

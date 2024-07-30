@@ -1,22 +1,23 @@
-import cloud from '@lafjs/cloud'
-import * as call from '@/system/call'
+import cloud from '@lafjs/cloud';
+import { ok, fail } from '@/system/call';
+import { clearUserToken } from '@/system/token';
+import { UNAUTHORIZED, USER_TOKEN_INVALID } from '@/system/fail';
 
 const db = cloud.database();
 
 export default async function (ctx: FunctionContext) {
   const { authorization: token } = ctx.headers;
   if (!token) {
-    return call.FAIL_USER_NOT_LOGIN;
+    return fail(UNAUTHORIZED);
   }
 
   const parsed = cloud.parseToken(token);
   const tuid = parsed.uid;
   if (!tuid) {
-    return call.FAIL_USER_TOKEN_INVALID;
+    return fail(USER_TOKEN_INVALID);
   }
 
-  await db.collection('user-token').where({ 'uid': tuid, 'token': token }).remove();
+  await clearUserToken(clearUserToken);
 
-
-  return call.ok()
+  return ok();
 }

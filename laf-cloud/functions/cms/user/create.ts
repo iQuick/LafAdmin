@@ -1,48 +1,41 @@
 import cloud from '@lafjs/cloud';
+import { ok, fail } from '@/system/call';
 import { PHONE, EMAIL } from '@/utils/regex';
-const db = cloud.database();
-const shared = cloud.shared;
+import { checkToken, checkPermission, hashPassword } from '@/system/sys';
+import { ACCOUNT_ALREADY_EXIST, INVALID_EMAIL, INVALID_PHONE, PARAMS_EMPTY } from '@/system/fail';
 
-const checkPermission = shared.get('checkPermission');
-const hashPassword = shared.get('hashPassword');
+const db = cloud.database();
 
 export async function main(ctx: FunctionContext) {
-  const { headers } = ctx;
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return 'Unauthorized';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
-  // check permission
-  const code = await checkPermission(uid, 'user.create');
-  if (code) {
-    return 'Permission denied';
+  const pms = await checkPermission(token.uid, 'user.create');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   // check params
   const { username, password, avatar, nickname, phone, email } = ctx.body;
   if (!username || !nickname || !password) {
-    return 'username & nickname & password cannot be empty';
+    return fail(PARAMS_EMPTY);
   }
 
   // check exist
   const { total } = await db.collection('user').where({ username }).count();
   if (total > 0) {
-    return 'username already exists';
+    return fail(ACCOUNT_ALREADY_EXIST);
   }
-
 
   if (phone && !PHONE.test(phone)) {
-    return { code: 1001, message: "手机号格式不正确" };
+    return fail(INVALID_PHONE);
   }
-
 
   if (email && !EMAIL.test(email)) {
-    return { code: 1001, message: "邮箱地址格式不正确" };
+    return fail(INVALID_EMAIL);
   }
-
 
   // add user
   const r = await db.collection('user').add({
@@ -51,6 +44,7 @@ export async function main(ctx: FunctionContext) {
     avatar: avatar ?? null,
     phone: phone ?? null,
     email: email ?? null,
+    status: 1,
     created_at: Date.now(),
     updated_at: Date.now(),
   });
@@ -64,8 +58,5 @@ export async function main(ctx: FunctionContext) {
     updated_at: Date.now(),
   });
 
-  return {
-    code: 0,
-    result: r,
-  };
+  return ok(r);
 }

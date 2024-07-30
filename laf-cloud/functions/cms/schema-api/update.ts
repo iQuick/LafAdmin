@@ -1,54 +1,44 @@
-
-import cloud from '@lafjs/cloud'
+import cloud from '@lafjs/cloud';
+import { ok, fail } from '@/system/call';
+import { checkToken, checkPermission } from '@/system/sys';
+import { PARAMS_EMPTY } from '@/system/fail';
 
 const db = cloud.database();
 
-const shared = cloud.shared;
-const checkPermission = shared.get('checkPermission');
-
 export default async function (ctx: FunctionContext) {
-
-  const { headers } = ctx;
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return 'Unauthorized';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
-  // check permission
-  const code = await checkPermission(uid, 'schema.api.edit');
-  if (code) {
-    return 'Permission denied';
+  const pms = await checkPermission(token.uid, 'schema.api.edit');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   const { _id, enable, apis } = ctx.body;
   if (!_id) {
-    return '_id cannot be empty';
+    return fail(PARAMS_EMPTY);
   }
 
-
   const data = { updated_at: Date.now() } as any;
-  if (enable) {
+  if (enable === true || enable === false) {
     data.enable = enable;
   }
   if (apis) {
     data.apis = apis;
   }
 
-
   // update schema
   const sapi = db.collection('schema-api').doc(_id);
   if (apis) {
     await sapi.update({
-      apis: db.command.remove()
+      apis: db.command.remove(),
+      updated_at: Date.now(),
     });
   }
+
   const r = await sapi.update(data);
 
-  return {
-    code: 0,
-    result: r,
-  };
-
+  return ok(r);
 }

@@ -1,44 +1,40 @@
 import cloud from '@lafjs/cloud';
-const db = cloud.database();
-const shared = cloud.shared;
+import { ok, fail } from '@/system/call';
+import { checkToken, checkPermission } from "@/system/sys";
+import { INVALID_PERMISSION, PARAMS_EMPTY } from "@/system/fail";
 
-const checkPermission = shared.get('checkPermission');
+const db = cloud.database();
 
 export async function main(ctx: FunctionContext) {
-  const { headers } = ctx;
-  const token = headers['authorization'].split(' ')[1];
-  const parsed = cloud.parseToken(token);
-  const uid = parsed.uid;
-  if (!uid) {
-    return 'Unauthorized';
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
   // check permission
-  const code = await checkPermission(uid, 'permission.edit');
-  if (code) {
-    return 'Permission denied';
+  const pms = await checkPermission(token.uid, 'permission.edit');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   const { name, label, _id } = ctx.body;
   if (!_id || !name || !label) {
-    return '_id or name or label cannot be empty';
+    return fail(PARAMS_EMPTY);
   }
 
   // check id
-  const { data: permission } = await db.collection('permission').where({ _id }).getOne();
+  const op = db.collection('permission').doc(_id);
+  const { data: permission } = await op.get();
   if (!permission) {
-    return { code: 'INVALID_PARAM', error: 'not exists' };
+    return fail(INVALID_PERMISSION);
   }
 
   // add permission
-  const r = await db.collection('permission').where({ _id }).update({
+  const r = await op.update({
     name,
     label,
     updated_at: Date.now(),
   });
 
-  return {
-    code: 0,
-    result: r,
-  };
+  return ok(r);
 }

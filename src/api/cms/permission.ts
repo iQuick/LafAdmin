@@ -41,3 +41,14 @@ export function deletePermission(id) {
     },
   });
 }
+
+export function enablePermission(_id, enable: Boolean) {
+  return http.request({
+    url: '/cms/permission/enable',
+    method: 'POST',
+    data: {
+      _id,
+      status: enable ? 1 : 0,
+    },
+  });
+}

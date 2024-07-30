@@ -81,3 +81,14 @@ export function resetPasswordUser(params) {
     params,
   });
 }
+
+export function enableUser(_id, enable: Boolean) {
+  return http.request({
+    url: '/cms/user/enable',
+    method: 'POST',
+    data: {
+      _id,
+      status: enable ? 1 : 0,
+    },
+  });
+}

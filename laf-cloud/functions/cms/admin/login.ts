@@ -1,17 +1,22 @@
 import cloud from '@lafjs/cloud';
+import { hashPassword } from '@/system/sys';
+import { createAdminToken } from '@/system/token';
+import { ok, fail } from '@/system/call';
+import { ACCOUNT_PASSWD_INVALID, INVALID_ADMIN_ACCOUNT } from '@/system/fail';
 
 const db = cloud.database();
-const hashPassword = cloud.shared.get('hashPassword');
 
 export async function main(ctx: FunctionContext) {
   const { username, password } = ctx.body;
-  if (!username || !password) return { code: 'INVALID_PARAM', error: '账号和密码不可为空' };
+  if (!username || !password) {
+    return fail(ACCOUNT_PASSWD_INVALID);
+  }
 
   const { data: admin } = await db
     .collection('admin')
     .where({ username })
     .withOne({
-      query: db.collection('password').where({ type: 'admin', status: "active" }),
+      query: db.collection('password').where({ type: 'admin', status: 'active' }),
       localField: '_id',
       foreignField: 'uid',
       as: 'password',
@@ -20,23 +25,18 @@ export async function main(ctx: FunctionContext) {
 
   // check username and password
   const isMatchPassword = admin.password?.password === hashPassword(password);
-  if (!admin || !isMatchPassword) return { code: 'INVALID_PARAM', error: '账号或密码错误' };
+  if (!admin || !isMatchPassword) {
+    return fail(ACCOUNT_PASSWD_INVALID);
+  }
 
-  // 默认 token 有效期为 7 天
-  const expire = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7;
-  const payload = {
+  if (!admin.status) {
+    return fail(INVALID_ADMIN_ACCOUNT);
+  }
+
+  const token = await createAdminToken(admin._id);
+
+  return ok({
     uid: admin._id,
-    type: 'admin',
-    exp: expire,
-  };
-
-  const access_token = cloud.getToken(payload);
-  return {
-    code: 0,
-    data: {
-      access_token,
-      uid: admin._id,
-      expire,
-    },
-  };
+    ...token
+  });
 }

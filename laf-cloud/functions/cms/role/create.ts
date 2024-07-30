@@ -1,48 +1,41 @@
-import cloud from '@lafjs/cloud'
-const db = cloud.database()
-const shared = cloud.shared
+import cloud from '@lafjs/cloud';
+import { ok, fail } from '@/system/call';
+import { checkToken, checkPermission } from '@/system/sys';
+import { ALREADY_EXIST_ROLE, PARAMS_EMPTY } from '@/system/fail';
 
-const checkPermission = shared.get('checkPermission')
+const db = cloud.database();
 
 export async function main(ctx: FunctionContext) {
-  const { headers } = ctx
-  const token = headers['authorization'].split(' ')[1]
-  const parsed = cloud.parseToken(token)
-  const uid = parsed.uid
-  if (!uid) {
-    return 'Unauthorized'
+  const token = await checkToken(ctx);
+  if (token.code !== 0) {
+    return fail(token);
   }
 
   // check permission
-  const code = await checkPermission(uid, 'role.create');
-  if (code) {
-    return 'Permission denied';
+  const pms = await checkPermission(token.uid, 'role.create');
+  if (pms.code !== 0) {
+    return fail(pms);
   }
 
   const { name, label, permissions } = ctx.body;
   if (!name || !label) {
-    return 'name or label cannot be empty';
+    return fail(PARAMS_EMPTY);
   }
 
   // check exist
-  const { total } = await db.collection('role').where({ name }).count()
+  const { total } = await db.collection('role').where({ name }).count();
   if (total > 0) {
-    return 'role already exists'
+    return fail(ALREADY_EXIST_ROLE);
   }
 
   // add permission
-  const r = await db.collection('role')
-    .add({
-      name,
-      label,
-      permissions: permissions ?? [],
-      created_at: Date.now(),
-      updated_at: Date.now()
-    })
+  const r = await db.collection('role').add({
+    name,
+    label,
+    permissions: permissions ?? [],
+    created_at: Date.now(),
+    updated_at: Date.now(),
+  });
 
-  return {
-    code: 0,
-    result: r
-  }
+  return ok(r);
 }
-
