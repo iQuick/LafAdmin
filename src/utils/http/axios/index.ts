@@ -25,7 +25,6 @@ import { storage } from '@/utils/Storage';
 import { ACCESS_TOKEN, CURRENT_USER } from '@/store/mutation-types';
 import { logger } from '@/utils/Logger';
 import { Recordable } from 'vite-plugin-mock';
-const API_URL = import.meta.env.VITE_GLOB_LAF_URL;
 
 /**
  * @description: 数据处理，方便区分多种处理方式
@@ -104,7 +103,7 @@ const transform: AxiosTransform = {
         $message.error(errorMsg);
         break;
       // 登录超时
-      case ResultEnum.TIMEOUT:
+      case ResultEnum.TOKEN_EXPIRE:
         if (router.currentRoute.value?.name === LoginName) return;
         // 到登录页
         errorMsg = '登录超时，请重新登录!';
@@ -122,12 +121,18 @@ const transform: AxiosTransform = {
           onNegativeClick: () => {},
         });
         break;
+      case ResultEnum.TOKEN_INVALID:
+        if (router.currentRoute.value?.name === LoginName) return;
+        errorMsg = '无效的用户，请重新登录!';
+        storage.clear();
+        window.location.href = LoginPath;
+        break;
       case ResultEnum.NO_PERMISSION:
         if (router.currentRoute.value?.name === LoginName) return;
         // 到登录页
         storage.remove(ACCESS_TOKEN);
         storage.remove(CURRENT_USER);
-        window.location.href = `${API_URL}/#/login`;
+        window.location.href = `/#/login`;
         break;
     }
     throw new Error(errorMsg);

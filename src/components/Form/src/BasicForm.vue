@@ -76,10 +76,10 @@
             <n-checkbox-group v-model:value="formModel[schema.field]">
               <n-space>
                 <n-checkbox
-                  v-for="item in schema.componentProps.options"
-                  :key="item.value"
-                  :value="item.value"
-                  :label="item.label"
+                  v-for="(value, key) in schema.componentProps.options"
+                  :key="key"
+                  :value="value"
+                  :label="value"
                 />
               </n-space>
             </n-checkbox-group>
@@ -90,21 +90,37 @@
             <n-radio-group v-model:value="formModel[schema.field]">
               <n-space>
                 <n-radio
-                  v-for="item in schema.componentProps.options"
-                  :key="item.value"
-                  :value="item.value"
-                >
-                  {{ item.label }}
-                </n-radio>
+                  v-for="(value, key) in schema.componentProps.options"
+                  :key="key"
+                  :value="value"
+                  :label="value"
+                />
               </n-space>
             </n-radio-group>
           </template>
-
+          <!--NDynamicTags-->
+          <template v-else-if="schema.component === 'NDynamicTags'">
+            <n-dynamic-tags
+              v-model:value="formModel[schema.field]"
+              :class="{ isFull: schema.isFull != false && getProps.isFull }"
+            />
+          </template>
+          <!--NSelect-->
+          <template v-else-if="schema.component === 'NEnum'">
+            <n-select
+              @updateValue="(v) => handleEnumSelectUpdate(schema, v)"
+              v-model:value="enumSelected[schema.field]"
+              :options="schema.componentProps.options"
+              :multiple="schema.componentProps.multiple"
+              :class="{ isFull: schema.isFull != false && getProps.isFull }"
+            />
+          </template>
           <!--NSelect-->
           <template v-else-if="schema.component === 'NSelect'">
             <n-select
               v-model:value="formModel[schema.field]"
               :options="schema.componentProps.options"
+              :multiple="schema.componentProps.multiple"
               :class="{ isFull: schema.isFull != false && getProps.isFull }"
             />
           </template>
@@ -114,6 +130,7 @@
             <n-select
               v-model:value="formModel[schema.field]"
               :options="schema.componentProps.options"
+              :multiple="schema.componentProps.multiple"
               remote
               clearable
               @search="schema.componentProps.onSearch"
@@ -124,12 +141,16 @@
           <!--NUploader-->
           <template v-else-if="schema.component === 'NUpload'">
             <n-upload
-              directory-dnd
-              :multiple="false"
+              :multiple="schema.componentProps.multiple"
+              :max="schema.componentProps.multiple ? 99 : 1"
               :custom-request="customRequest"
-              :max="1"
-              @finish="handleUploadFinish(schema.field)"
-              @remove="handleUploadRemove(schema.field)"
+              v-model:file-list="uploadFileList[schema.field]"
+              @update:file-list="
+                (list) => handleFileListChange(schema.field, schema.componentProps.multiple, list)
+              "
+              @beforeUpload="(file) => handleUploadBefore(schema.type, file)"
+              @finish="handleUploadFinish"
+              @remove="handleUploadRemove"
             >
               <n-upload-dragger>
                 <div style="margin-bottom: 12px">
@@ -137,7 +158,7 @@
                     <archive-icon />
                   </n-icon>
                 </div>
-                <n-text style="font-size: 16px"> 点击或者拖动文件到该区域来上传 </n-text>
+                <n-text style="font-size: 16px"> 点击或者拖动文件到该区域来上传</n-text>
               </n-upload-dragger>
             </n-upload>
           </template>
@@ -176,6 +197,7 @@
             v-bind="getComponentProps(schema)"
             :is="schema.component"
             v-model:value="formModel[schema.field]"
+            :multiple="schema.componentProps.multiple"
             :class="{ isFull: schema.isFull != false && getProps.isFull }"
           />
           <!--组件后面的内容-->
@@ -206,14 +228,11 @@
             v-bind="getSubmitBtnOptions"
             @click="handleSubmit"
             :loading="loadingSub"
-            >{{ getProps.submitButtonText }}</n-button
-          >
-          <n-button
-            v-if="getProps.showResetButton"
-            v-bind="getResetBtnOptions"
-            @click="resetFields"
-            >{{ getProps.resetButtonText }}</n-button
-          >
+            >{{ getProps.submitButtonText }}
+          </n-button>
+          <n-button v-if="getProps.showResetButton" v-bind="getResetBtnOptions" @click="resetFields"
+            >{{ getProps.resetButtonText }}
+          </n-button>
           <n-button
             type="primary"
             text
@@ -257,6 +276,7 @@
 
   import { basicProps } from './props';
   import { DownOutlined, UpOutlined, QuestionCircleOutlined } from '@vicons/antd';
+  import { useMessage } from 'naive-ui';
 
   import type { Ref } from 'vue';
   import type { GridProps } from 'naive-ui/lib/grid';
@@ -266,7 +286,7 @@
   import { isArray } from '@/utils/is/index';
   import { deepMerge } from '@/utils';
   import { uploadFile } from '@/api/cloud';
-  import { UploadCustomRequestOptions } from 'naive-ui';
+  import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
   import { Recordable } from 'vite-plugin-mock';
   import { Toolbar, Editor } from '@wangeditor/editor-for-vue';
 
@@ -286,6 +306,7 @@
       const gridCollapsed = ref(true);
       const loadingSub = ref(false);
       const isUpdateDefaultRef = ref(false);
+      const message = useMessage();
 
       // 编辑器实例，必须用 shallowRef
       const editorRef = shallowRef();
@@ -316,21 +337,6 @@
         },
       };
 
-      const uploadFileUrl = ref('');
-      async function customRequest(options: UploadCustomRequestOptions) {
-        const { file, onFinish } = options;
-        const { url } = await uploadFile(file?.file as File);
-        uploadFileUrl.value = url;
-
-        onFinish();
-      }
-
-      onBeforeUnmount(() => {
-        const editor = editorRef.value;
-        if (editor == null) return;
-        editor.destroy();
-      });
-
       const handleEditorCreated = (editor) => {
         editorRef.value = editor; // 记录 editor 实例，重要！
         editorRef.value.on('fullScreen', () => {
@@ -341,43 +347,11 @@
         });
       };
 
-      const handleUploadFinish = (res: any) => {
-        formModel[res] = uploadFileUrl.value;
-      };
-
-      const handleUploadRemove = (res: any) => {
-        formModel[res] = '';
-      };
-
-      const getSubmitBtnOptions = computed(() => {
-        return Object.assign(
-          {
-            size: props.size,
-            type: 'primary',
-          },
-          props.submitButtonOptions
-        );
+      onBeforeUnmount(() => {
+        const editor = editorRef.value;
+        if (editor == null) return;
+        editor.destroy();
       });
-
-      const getResetBtnOptions = computed(() => {
-        return Object.assign(
-          {
-            size: props.size,
-            type: 'default',
-          },
-          props.resetButtonOptions
-        );
-      });
-
-      function getComponentProps(schema) {
-        const compProps = schema.componentProps ?? {};
-        const component = schema.component;
-        return {
-          clearable: true,
-          placeholder: createPlaceholderMessage(unref(component)),
-          ...compProps,
-        };
-      }
 
       const getProps = computed((): FormProps => {
         const formProps = { ...props, ...unref(propsRef) } as FormProps;
@@ -423,6 +397,154 @@
         }
         return schemas as FormSchema[];
       });
+
+      watch(getSchema, (schemas) => {
+        loadUploadFile(schemas);
+        loadEnumSelected(schemas);
+      });
+
+      const uploadFileList = reactive({});
+      const loadUploadFile = (schemas) => {
+        for (const schema of schemas) {
+          uploadFileList[schema.field] = [];
+          if (!(schema.component === 'NUpload')) {
+            continue;
+          }
+          if (!schema.defaultValue) {
+            continue;
+          }
+          if (schema.componentProps?.multiple) {
+            (schema.defaultValue as []).forEach((url) => {
+              uploadFileList[schema.field].push({
+                name: url,
+                url: url,
+                thumbnailUrl: url,
+                status: 'finished',
+              });
+            });
+          } else {
+            uploadFileList[schema.field].push({
+              name: schema.defaultValue,
+              url: schema.defaultValue,
+              thumbnailUrl: schema.defaultValue,
+              status: 'finished',
+            });
+          }
+        }
+      };
+      const customRequest = async (options: UploadCustomRequestOptions) => {
+        const { file, onProgress, onFinish, onError } = options;
+        uploadFile(file?.file as File, '', (progress) => {
+          onProgress({ percent: progress });
+        })
+          .then((info) => {
+            file.url = info.url;
+            file.thumbnailUrl = info.url;
+            onFinish();
+          })
+          .catch((e) => {
+            message.error('上传失败');
+            onError();
+          });
+      };
+
+      const enumSelected = reactive({});
+      const loadEnumSelected = (schemas) => {
+        for (const schema of schemas) {
+          if (!(schema.component === 'NEnum')) {
+            continue;
+          }
+          if (schema.componentProps?.multiple) {
+            enumSelected[schema.field] = schema.defaultValue.map((_) => _.value);
+          } else {
+            enumSelected[schema.field] = schema.defaultValue.value;
+          }
+        }
+      };
+      const handleEnumSelectUpdate = (schema, value) => {
+        console.log(`handleEnumSelectUpdate ${schema.field} , ${value}`);
+        const values = schema.componentProps?.options.filter((_) => {
+          return value.indexOf(_.value) !== -1;
+        });
+        if (schema.componentProps?.multiple) {
+          formModel[schema.field] = values;
+        } else {
+          if (values.length > 0) {
+            formModel[schema.field] = values[0];
+          } else {
+            formModel[schema.field] = '';
+          }
+        }
+      };
+
+      const handleUploadBefore = (type: any, data: any) => {
+        console.log('handleUploadBefore ');
+        if (type === 'Image' && !data.file.file?.type.startsWith('image/')) {
+          message.error('请上传图片文件');
+          return false;
+        }
+        if (type === 'Video' && !data.file.file?.type.startsWith('video/')) {
+          message.error('请上传视频文件');
+          return false;
+        }
+        if (type === 'Audio' && !data.file.file?.type.startsWith('audio/')) {
+          message.error('请上传音频文件');
+          return false;
+        }
+        return true;
+      };
+
+      const handleUploadFinish = (data: any) => {
+        // formModel[res] = uploadFileUrl.value;
+      };
+
+      const handleUploadRemove = (data: any) => {
+        // formModel[res] = '';
+      };
+
+      const handleFileListChange = (res: any, multiple: Boolean, list: UploadFileInfo[]) => {
+        if (multiple) {
+          formModel[res] = list.map((item) => {
+            return item.url;
+          });
+        } else {
+          if (list.length > 0) {
+            formModel[res] = list[0].url;
+          } else {
+            formModel[res] = '';
+          }
+        }
+      };
+
+      const getSubmitBtnOptions = computed(() => {
+        return Object.assign(
+          {
+            size: props.size,
+            type: 'primary',
+          },
+          props.submitButtonOptions
+        );
+      });
+
+      const getResetBtnOptions = computed(() => {
+        return Object.assign(
+          {
+            size: props.size,
+            type: 'default',
+          },
+          props.resetButtonOptions
+        );
+      });
+
+      function getComponentProps(schema) {
+        const compProps = schema.componentProps ?? {};
+        const component = schema.component;
+        return {
+          clearable: true,
+          placeholder: createPlaceholderMessage(unref(component)),
+          ...compProps,
+        };
+      }
 
       const { handleFormValues, initDefault } = useFormValues({
         defaultFormModel,
@@ -497,10 +619,15 @@
         loadingSub,
         isInline,
         getComponentProps,
+        uploadFileList,
         unfoldToggle,
         customRequest,
+        enumSelected,
+        handleEnumSelectUpdate,
+        handleUploadBefore,
         handleUploadFinish,
         handleUploadRemove,
+        handleFileListChange,
         handleEditorCreated,
       };
     },
@@ -512,18 +639,22 @@
     font-size: 2.2em;
     font-weight: bold;
   }
+
   h2 {
     font-size: 1.8em;
     font-weight: bold;
   }
+
   h3 {
     font-size: 1.5em;
     font-weight: bold;
   }
+
   h4 {
     font-size: 1.2em;
     font-weight: bold;
   }
+
   h5 {
     font-size: 1em;
     font-weight: bold;

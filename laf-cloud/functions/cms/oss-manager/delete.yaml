@@ -1,0 +1,6 @@
+name: cms/oss-manager/delete
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

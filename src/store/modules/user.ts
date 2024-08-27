@@ -88,6 +88,7 @@ export const useUserStore = defineStore({
         }
         return Promise.resolve(response);
       } catch (e) {
+        logger.log(e);
         return Promise.reject(e);
       }
     },
@@ -99,6 +100,7 @@ export const useUserStore = defineStore({
         storage.set(SCHEMA_INFO, result);
         return Promise.resolve(result);
       } catch (e) {
+        logger.log(e);
         return Promise.reject(e);
       }
     },
@@ -118,7 +120,7 @@ export const useUserStore = defineStore({
         return Promise.resolve(result);
       } catch (error) {
         logger.log(error);
-        return;
+        return Promise.reject(error);
       }
     },
 

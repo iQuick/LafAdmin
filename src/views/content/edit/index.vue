@@ -82,9 +82,11 @@
         return 'NRichText';
       case 'Markdown':
         return 'NMarkdown';
-      case 'Image':
-      case 'Media':
       case 'File':
+      case 'Image':
+      case 'Video':
+      case 'Audio':
+        // case 'Media':
         return 'NUpload';
       case 'Email':
         return 'NInputEmail';
@@ -92,12 +94,18 @@
         return 'NInputMobile';
       case 'Url':
         return 'NInputUrl';
-      // case 'Array':
-      //   return 'NInput';
+      case 'Array':
+        return 'NDynamicTags';
       case 'Object':
         return 'NInput';
       case 'Enum':
-        return 'NSelect';
+      case 'SingleEnum':
+      case 'MultipleEnum':
+        return 'NEnum';
+      case 'SingleSelect':
+        return 'NRadioGroup';
+      case 'MultipleSelect':
+        return 'NCheckbox';
       case 'Connect':
         return 'NSelect';
       default:
@@ -115,8 +123,12 @@
           value: _._id,
         }));
       }
+
       if (item.type === 'Enum') {
         item.options = item.enumElements;
+      }
+      if (item.type === 'SingleSelect' || item.type === 'MultipleSelect') {
+        item.options = item.selectElements;
       }
     }
 
@@ -124,10 +136,9 @@
       .filter((item) => !item.isSystem)
       .map((item: any) => {
         const component = getComponentByType(item.type);
-        const isMultiple = item.type === 'Array';
-
+        const isMultiple = item.type === 'Array' || item.type === 'MultipleEnum' || item.isMultiple;
         const componentProps = {
-          // placeholder: '请输入' + item.displayName,
+          placeholder: '请输入' + item.displayName + (isMultiple ? '，多个值之间请使用逗号隔开' : ''),
           multiple: isMultiple,
           options: item.options,
           clearable: !item.isRequired,
@@ -142,8 +153,7 @@
           component,
           label: item.displayName,
           type: item.type,
-          defaultValue:
-            routerName === 'ContentEdit' ? contentInfo.value[item.name] : item.defaultValue,
+          defaultValue: routerName === 'ContentEdit' ? contentInfo.value[item.name] : item.defaultValue,
           componentProps,
           rules: [{ required: item.isRequired, message: '需要' + item.displayName }],
         };

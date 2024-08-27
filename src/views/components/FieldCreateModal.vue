@@ -33,10 +33,28 @@
   const formBtnLoading = ref(false);
 
   // 不能设置默认值的类型
-  const NoDefaultValueTypes = ['File', 'Image', 'Array', 'Connect'];
+  const NoDefaultValueTypes = [
+    'File',
+    'Image',
+    'Video',
+    'Audio',
+    'Array',
+    'Connect',
+    'SingleSelect',
+    'MultipleSelect',
+  ];
   const hasDefaultValue = (type: SchemaFieldType | undefined) => {
     if (!type) return false;
     return !NoDefaultValueTypes.includes(type);
+  };
+
+  const getDefaultMultiple = (type: SchemaFieldType | undefined) => {
+    switch (type) {
+      case 'MultipleSelect':
+        return true;
+      default:
+        return false;
+    }
   };
 
   const getDefaultValue = (type: SchemaFieldType | undefined) => {
@@ -53,7 +71,9 @@
         return new Date().getTime();
       case 'File':
       case 'Image':
-      case 'Media':
+      case 'Video':
+      case 'Audio':
+        // case 'Media':
         return null;
       case 'Array':
         return [];
@@ -68,6 +88,7 @@
     displayName: '',
     name: '',
     description: '',
+    isMultiple: getDefaultMultiple(selectField.value?.type),
     isRequired: false,
     isHidden: false,
     isOrderField: false,
@@ -81,6 +102,7 @@
     formParams.displayName = '';
     formParams.name = '';
     formParams.description = '';
+    formParams.isMultiple = getDefaultMultiple(selectField.value?.type);
     formParams.isRequired = false;
     formParams.isHidden = false;
     formParams.isOrderField = false;
@@ -190,7 +212,7 @@
       <n-form-item v-if="hasDefaultValue(selectField?.type)" label="默认值">
         <n-input-number
           v-if="selectField?.type === 'Number'"
-          v-model="formParams.defaultValue"
+          v-model:value="formParams.defaultValue"
           placeholder="请输入默认值"
         />
         <n-switch
@@ -212,11 +234,18 @@
           formValue: formParams as any,
           schemas: allSchemas,
           selectField: selectField,
-          fieldAction: 'create',
+          fieldAction: fieldAction,
           connectSchema: {} as Schema,
         }"
       />
 
+      <n-form-item
+        label="允许多个"
+        path="isMultiple"
+        v-if="['Image', 'Video', 'Audio', 'File', 'Media'].indexOf(selectField?.type) !== -1"
+      >
+        <n-switch v-model:value="formParams.isMultiple" />
+      </n-form-item>
       <n-form-item label="是否必须" path="isRequired">
         <n-switch v-model:value="formParams.isRequired" />
       </n-form-item>

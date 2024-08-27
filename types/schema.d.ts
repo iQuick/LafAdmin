@@ -26,6 +26,9 @@ interface SchemaField {
   // 是否搜索项
   isSearch: boolean;
 
+  // 是否多个
+  isMultiple: boolean;
+
   // 是否必需字段
   isRequired: boolean;
 
@@ -72,8 +75,11 @@ interface SchemaField {
   // 枚举
   // 枚举元素的类型
   enumElementType: 'string' | 'number';
+  enumElementSelect: 'string';
   // 所有枚举元素
   enumElements: { label: string; value: string }[];
+
+  selectElements: string[];
 
   // 允许多个值
   isMultiple: boolean;
@@ -112,7 +118,10 @@ type SchemaFieldType =
   | 'Date'
   | 'File'
   | 'Image'
-  | 'Media'
+  | 'Audio'
+  | 'Video'
+  // | 'Attachment'
+  // | 'Media'
   | 'Email'
   | 'Tel'
   | 'Url'
@@ -121,6 +130,10 @@ type SchemaFieldType =
   | 'Connect'
   | 'Array'
   | 'Enum'
+  | 'SingleEnum'
+  | 'MultipleEnum'
+  | 'SingleSelect'
+  | 'MultipleSelect'
   | 'Object';
 
 interface Project {

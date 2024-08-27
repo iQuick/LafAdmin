@@ -1,0 +1,5 @@
+name: cms/user-token/delete
+desc: ""
+methods:
+  - POST
+tags: []

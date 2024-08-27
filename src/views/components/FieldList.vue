@@ -125,7 +125,7 @@
             <n-tag v-else-if="item.max" class="tag" size="small" type="info">
               {{ `最小长度${item.min}` }}
             </n-tag>
-            <n-tag class="tag" v-if="item.defaultValue" size="small" type="info">
+            <n-tag class="tag" v-if="item.defaultValue != undefined && item.defaultValue != null && item.defaultValue != ''" size="small" type="info">
               {{ `默认值：${item.defaultValue}` }}
             </n-tag>
             <n-tag class="tag" v-if="item.isRequired" size="small" type="info">
@@ -139,6 +139,9 @@
             </n-tag>
             <n-tag class="tag" v-if="item.isOrderField" size="small" type="info">
               {{ item.orderDirection === 'asc' ? '升序' : '降序' }}
+            </n-tag>
+            <n-tag class="tag" v-if="item.enumElementSelect" size="small" type="info">
+              {{ item.enumElementSelect === 'single' ? '单选' : '多选' }}
             </n-tag>
           </div>
         </div>

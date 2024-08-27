@@ -1,5 +1,5 @@
-import {http} from '@/utils/http/axios';
-import {BasicPageParams, BasicResponseModel} from '@/api/been/basic';
+import { http } from '@/utils/http/axios';
+import { BasicPageParams, BasicResponseModel } from '@/api/been/basic';
 
 /**
  * @description: 获取用户信息

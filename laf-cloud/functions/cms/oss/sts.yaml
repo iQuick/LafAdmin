@@ -1,0 +1,7 @@
+name: cms/oss/sts
+desc: ""
+methods:
+  - GET
+  - POST
+tags:
+  - upload

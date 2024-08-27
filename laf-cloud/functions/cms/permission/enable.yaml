@@ -1,0 +1,5 @@
+name: cms/permission/enable
+desc: ""
+methods:
+  - POST
+tags: []

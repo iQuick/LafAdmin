@@ -1,0 +1,5 @@
+name: cms/user/enable
+desc: ""
+methods:
+  - POST
+tags: []

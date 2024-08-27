@@ -1,0 +1,5 @@
+name: cms/oss-manager/update
+desc: ""
+methods:
+  - POST
+tags: []

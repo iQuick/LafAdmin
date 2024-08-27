@@ -1,0 +1,5 @@
+name: cms/oss-manager/create
+desc: ""
+methods:
+  - POST
+tags: []

@@ -20,8 +20,8 @@ export const FieldTypes: FieldType[] = [
   },
   // 数字：整形、浮点型
   {
-    name: '数字',
     type: 'Number',
+    name: '数字',
   },
   // 布尔值
   {
@@ -29,9 +29,25 @@ export const FieldTypes: FieldType[] = [
     name: '布尔值',
   },
   {
+    type: 'SingleSelect',
+    name: '单选',
+  },
+  {
+    type: 'MultipleSelect',
+    name: '多选',
+  },
+  {
     type: 'Enum',
     name: '枚举',
   },
+  // {
+  //   type: 'SingleEnum',
+  //   name: '单选枚举',
+  // },
+  // {
+  //   type: 'MultipleEnum',
+  //   name: '多选枚举',
+  // },
   // 时间
   {
     type: 'Date',
@@ -55,9 +71,21 @@ export const FieldTypes: FieldType[] = [
     name: '图片',
   },
   {
-    type: 'Media',
-    name: '多媒体',
+    type: 'Audio',
+    name: '音频',
   },
+  {
+    type: 'Video',
+    name: '视频',
+  },
+  // {
+  //   type: 'Attachment',
+  //   name: '附件',
+  // },
+  // {
+  //   type: 'Media',
+  //   name: '多媒体',
+  // },
   // 邮箱地址
   {
     type: 'Email',

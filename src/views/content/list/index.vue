@@ -74,10 +74,10 @@
         key: item.name,
         width: (() => {
           if (item.name === 'status') {
-            return 40;
+            return 80;
           }
           if (item.type === 'DateTime') {
-            return 100;
+            return 120;
           }
           return 200;
         })(),
@@ -90,9 +90,9 @@
           if (item.type === 'Boolean') {
             return row[item.name] ? '是' : '否';
           }
-          if (item.type === 'Array') {
+          if (item.type === 'Array' || item.type === 'MultipleSelect') {
             if (!Array.isArray(row[item.name])) return row[item.name];
-            return row[item.name]?.join(',');
+            return row[item.name]?.join('，');
           }
           if (item.type === 'Image') {
             return h('img', {
@@ -120,8 +120,14 @@
             });
           }
           if (item.type === 'Enum') {
-            const enumItem = item.enumElements.find((_) => _.value === row[item.name]);
-            return enumItem ? enumItem.label : '';
+            if (Array.isArray(row[item.name])) {
+              return row[item.name]
+                ?.map((_) => {
+                  return _.label;
+                })
+                .join('，');
+            }
+            return row[item.name]?.label;
           }
           // todo connect
           if (item.type === 'Connect') {
@@ -176,14 +182,20 @@
             label: '启用',
             key: 'enabled',
             ifShow: () => {
-              return !record.status && permissions.includes(`pms.content.${schemaInfo.collectionName}.edit`);
+              return (
+                !record.status &&
+                permissions.includes(`pms.content.${schemaInfo.collectionName}.edit`)
+              );
             },
           },
           {
             label: '禁用',
             key: 'disabled',
             ifShow: () => {
-              return record.status && permissions.includes(`pms.content.${schemaInfo.collectionName}.edit`);
+              return (
+                record.status &&
+                permissions.includes(`pms.content.${schemaInfo.collectionName}.edit`)
+              );
             },
           },
         ],

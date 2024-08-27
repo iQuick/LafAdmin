@@ -1,0 +1,6 @@
+name: cms/oss-manager/list
+desc: ""
+methods:
+  - GET
+  - POST
+tags: []

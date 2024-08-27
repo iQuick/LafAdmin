@@ -8,13 +8,13 @@
       formValue: SchemaField;
       schemas: Schema[];
       selectField: Partial<SchemaField> | undefined;
-      fieldAction: 'edit' | 'create';
+      c: 'edit' | 'create';
       connectSchema?: Schema;
     };
   }>();
 
   const { type, options } = toRefs(props);
-  const { formValue, schemas } = options.value;
+  const { fieldAction, formValue, schemas } = options.value;
 
   if (type.value === 'Date') {
     formValue.dateFormatType = 'timestamp-ms';
@@ -72,19 +72,56 @@
     </n-grid-item>
   </n-grid> -->
 
-  <n-grid :x-gap="12" :cols="1" v-else-if="type === 'Enum'">
-    <n-grid-item>
-      <n-form-item label="枚举元素类型" path="enumType">
-        <n-select
-          v-model:value="formValue.enumElementType"
-          placeholder="请选择枚举元素类型"
-          size="small"
-          :options="[
-            { label: '字符串', value: 'string' },
-            { label: '数字', value: 'number' },
-          ]"
-        />
+  <n-grid :x-gap="12" :cols="1" v-else-if="type === 'SingleSelect' || type === 'MultipleSelect'">
+    <n-grid-item disabled hidden>
+      <n-form-item label="选项类型" path="selectType">
+        <n-input v-model:value="formValue.isMultiple" />
       </n-form-item>
+    </n-grid-item>
+    <n-grid-item>
+      <n-form-item label="选项列表" path="selectElements">
+        <n-dynamic-tags v-model:value="formValue.selectElements" type="info" />
+      </n-form-item>
+    </n-grid-item>
+  </n-grid>
+
+  <n-grid
+    :x-gap="12"
+    :cols="1"
+    v-else-if="type === 'Enum' || type === 'SingleEnum' || type === 'MultipleEnum'"
+  >
+    <n-grid-item>
+      <n-grid :x-gap="12" :cols="2">
+        <n-grid-item>
+          <n-form-item label="单选/多选" path="enumSelect">
+            <n-select
+              v-model:value="formValue.enumElementSelect"
+              placeholder="请选择单选/多选"
+              size="small"
+              :disabled="fieldAction === 'edit'"
+              :default-value="formValue.isMultiple ? 'multiple' : 'single'"
+              :options="[
+                { label: '单选', value: 'single' },
+                { label: '多选', value: 'multiple' },
+              ]"
+            />
+          </n-form-item>
+        </n-grid-item>
+        <n-grid-item>
+          <n-form-item label="枚举元素类型" path="enumType">
+            <n-select
+              v-model:value="formValue.enumElementType"
+              placeholder="请选择枚举元素类型"
+              default-value="string"
+              size="small"
+              :options="[
+                { label: '字符串', value: 'string' },
+                { label: '数字', value: 'number' },
+              ]"
+            />
+          </n-form-item>
+        </n-grid-item>
+      </n-grid>
     </n-grid-item>
 
     <template v-for="(el, index) in formValue.enumElements" :key="el.value">

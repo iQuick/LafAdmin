@@ -5,9 +5,10 @@ export enum ResultEnum {
   OK = 0,
   SUCCESS = 200,
   ERROR = -1,
-  TIMEOUT = 10042,
-  TYPE = 'success',
   NO_PERMISSION = 401,
+  TOKEN_EXPIRE = 402,
+  TOKEN_INVALID = 403,
+  TYPE = 'success',
 }
 
 /**
