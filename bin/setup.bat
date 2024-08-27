@@ -1,6 +1,6 @@
 cd ../laf
 
-call laf user add xioobu -r https://laf.xioobu.cn
+call laf user add xioobu -r https://[host]
 call laf user switch xioobu
 
 echo "laf login"

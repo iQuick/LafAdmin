@@ -1,18 +1,21 @@
 import cloud from '@lafjs/cloud'
 import * as call from '@/system/call'
+import { relationConnect } from '@/system/db'
 
 const db = cloud.database();
 
 export default async function (ctx: FunctionContext) {
   const { id, collection } = ctx.headers;
+  const { data: schema } = await db.collection('schema').where({ collectionName: collection }).getOne();
   if (id) {
-    const { data } = await db.collection(collection).where({ _id: id }).getOne();
+    const { data } = await relationConnect(
+      db.collection(collection).where({ _id: id }),
+      schema.fields
+    ).getOne();
     return call.ok(data);
   } else {
     const params = { status: 1 } as any;
-    (
-      await db.collection('schema').where({ collectionName: collection }).getOne()
-    ).data.fields.forEach((field) => {
+    schema.fields.forEach((field) => {
       if (['created_at', 'updated_at'].indexOf(field.name) == -1) {
         const k = field.name;
         const v = ctx.query[field.name];
@@ -27,7 +30,7 @@ export default async function (ctx: FunctionContext) {
         }
       }
     });
-    
+
     const { order } = ctx.query;
     let { page, count } = ctx.query;
     if (!page) {
@@ -37,16 +40,18 @@ export default async function (ctx: FunctionContext) {
       count = 10;
     }
 
-    const dbq = db
-      .collection(collection)
-      .where(params)
+    const dbq = relationConnect(
+      db.collection(collection).where(params),
+      schema.fields
+    )
     let dbc = dbq
       .skip((page - 1) * count)
       .limit(parseInt(count));
+
     if (order) {
       dbc = dbc.orderBy(order, 'asc');
     }
-    
+
     const resData = await dbc.get();
     const resCount = await dbq.count();
     const totalPage = Math.ceil(resCount.total / count);

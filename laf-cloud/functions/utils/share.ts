@@ -20,6 +20,7 @@ export async function checkToken(ctx: FunctionContext): Promise<any> {
 
   const payload = cloud.parseToken(tks[1]);
   if (!payload || !payload.uid) {
+    console.debug('The token not found user!')
     return USER_TOKEN_INVALID;
   }
 
@@ -28,6 +29,7 @@ export async function checkToken(ctx: FunctionContext): Promise<any> {
     (path.startsWith('/cms/') && payload.type === 'admin') ||
     (path.startsWith('/api/') && payload.type === 'user')
   )) {
+    console.debug('The token user mismatch!')
     return USER_TOKEN_INVALID;
   }
 
@@ -38,11 +40,13 @@ export async function checkToken(ctx: FunctionContext): Promise<any> {
       .where({ uid: payload.uid, token: payload.token })
       .getOne()
     if (!utoken || !utoken.status) {
+      console.debug('The token is disenable!')
       return USER_TOKEN_INVALID;
     }
   }
 
   if (payload.expired_at > Date.now()) {
+    console.debug('The token expire!')
     return USER_TOKEN_EXPIRE;
   }
 
