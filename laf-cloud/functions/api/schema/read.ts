@@ -1,6 +1,6 @@
 import cloud from '@lafjs/cloud'
 import * as call from '@/system/call'
-import { relationConnect } from '@/system/db'
+import { connectSchemaRelation } from '@/system/db'
 
 const db = cloud.database();
 
@@ -8,9 +8,9 @@ export default async function (ctx: FunctionContext) {
   const { id, collection } = ctx.headers;
   const { data: schema } = await db.collection('schema').where({ collectionName: collection }).getOne();
   if (id) {
-    const { data } = await relationConnect(
-      db.collection(collection).where({ _id: id }),
-      schema.fields
+    const { data } = await connectSchemaRelation(
+      schema,
+      db.collection(collection).where({ _id: id })
     ).getOne();
     return call.ok(data);
   } else {
@@ -24,6 +24,8 @@ export default async function (ctx: FunctionContext) {
             params[k] = v === 'true';
           } else if (field.type === 'Number') {
             params[k] = parseInt(v);
+          } else if (field.type === 'Enum') {
+            params[k] = { value: (field.enumElementType === 'number' ? parseInt(v) : v) };
           } else {
             params[k] = v;
           }
@@ -40,9 +42,9 @@ export default async function (ctx: FunctionContext) {
       count = 10;
     }
 
-    const dbq = relationConnect(
-      db.collection(collection).where(params),
-      schema.fields
+    const dbq = connectSchemaRelation(
+      schema,
+      db.collection(collection).where(params)
     )
     let dbc = dbq
       .skip((page - 1) * count)

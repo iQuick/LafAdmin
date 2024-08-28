@@ -18,6 +18,7 @@ pnpm-debug.log*
 
 # env
 .env.development
+.env.development.hox
 .env.production
 
 # Editor directories and files

@@ -72,15 +72,15 @@
         title: item.displayName,
         dataIndex: item.name,
         key: item.name,
-        width: (() => {
-          if (item.name === 'status') {
-            return 80;
-          }
-          if (item.type === 'DateTime') {
-            return 120;
-          }
-          return 200;
-        })(),
+        // width: (() => {
+        //   if (item.name === 'status') {
+        //     return 80;
+        //   }
+        //   if (item.type === 'DateTime') {
+        //     return 120;
+        //   }
+        //   return 200;
+        // })(),
         render(row) {
           if (item.name === 'status') {
             return row[item.name]

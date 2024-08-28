@@ -1,6 +1,7 @@
 import cloud from '@lafjs/cloud';
 import { ok, fail } from '@/system/call';
 import { checkPermission, checkToken } from '@/system/sys';
+import { findSchemaField } from '@/system/db';
 import { INVALID_SCHEMA, PARAMS_EMPTY } from '@/system/fail';
 
 const db = cloud.database();
@@ -49,10 +50,17 @@ export async function main(ctx: FunctionContext) {
 
   const where = {};
   for (const key in filters) {
-    if (filters[key]) {
+    const va = filters[key];
+    if (va) {
       try {
-        where[key] = new RegExp(`${filters[key]}`);
-      } catch (err) {}
+        const field = findSchemaField(schema, key)
+        if (field && field.type === 'Enum') {
+          where[key] = { value: (field.enumElementType === 'number' ? parseInt(va) : va) };;
+        } else {
+          where[key] = new RegExp(`${va}`);
+        }
+      } catch (err) {
+      }
     }
   }
 

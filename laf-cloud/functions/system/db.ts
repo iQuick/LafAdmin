@@ -3,9 +3,9 @@ import cloud from '@lafjs/cloud'
 
 const db = cloud.database();
 
-export const relationConnect = (sql, fields) => {
+export const connectSchemaRelation = (schema, sql) => {
   const relations = [];
-  for (const field of fields) {
+  for (const field of schema.fields) {
     if (field.type == 'Connect') {
       relations.push({
         query: db.collection(field.connectCollection),
@@ -19,4 +19,13 @@ export const relationConnect = (sql, fields) => {
     sql = sql.withOne(relation);
   });
   return sql;
+}
+
+export const findSchemaField = (schema, name) => {
+  for (const filed of schema.fields) {
+    if (filed.name === name) {
+      return filed;
+    }
+  }
+  return null;
 }

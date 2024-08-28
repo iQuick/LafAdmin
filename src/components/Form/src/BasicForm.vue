@@ -1,5 +1,5 @@
 <template>
-  <n-form v-bind="getBindValue" :model="formModel" ref="formElRef">
+  <n-form v-bind="getBindValue" :model="formModel" ref="formElRef" label-width="auto">
     <n-grid v-bind="getGrid">
       <n-gi v-bind="schema.giProps" v-for="schema in getSchema" :key="schema.field">
         <n-form-item :label="schema.label" :path="schema.field">
@@ -454,6 +454,9 @@
           if (!(schema.component === 'NEnum')) {
             continue;
           }
+          if (!schema.defaultValue) {
+            continue;
+          }
           if (schema.componentProps?.multiple) {
             enumSelected[schema.field] = schema.defaultValue.map((_) => _.value);
           } else {
@@ -462,7 +465,6 @@
         }
       };
       const handleEnumSelectUpdate = (schema, value) => {
-        console.log(`handleEnumSelectUpdate ${schema.field} , ${value}`);
         const values = schema.componentProps?.options.filter((_) => {
           return value.indexOf(_.value) !== -1;
         });
