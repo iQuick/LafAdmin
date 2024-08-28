@@ -102,6 +102,8 @@
       case 'SingleEnum':
       case 'MultipleEnum':
         return 'NEnum';
+      case 'Rate':
+        return 'NRate';
       case 'SingleSelect':
         return 'NRadioGroup';
       case 'MultipleSelect':

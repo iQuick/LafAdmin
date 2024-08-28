@@ -105,7 +105,7 @@
               :class="{ isFull: schema.isFull != false && getProps.isFull }"
             />
           </template>
-          <!--NSelect-->
+          <!--NEnum-->
           <template v-else-if="schema.component === 'NEnum'">
             <n-select
               @updateValue="(v) => handleEnumSelectUpdate(schema, v)"
@@ -134,6 +134,13 @@
               remote
               clearable
               @search="schema.componentProps.onSearch"
+              :class="{ isFull: schema.isFull != false && getProps.isFull }"
+            />
+          </template>
+          <!--NRate-->
+          <template v-else-if="schema.component === 'NRate'">
+            <n-rate
+              v-model:value="formModel[schema.field]"
               :class="{ isFull: schema.isFull != false && getProps.isFull }"
             />
           </template>

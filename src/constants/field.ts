@@ -40,6 +40,10 @@ export const FieldTypes: FieldType[] = [
     type: 'Enum',
     name: '枚举',
   },
+  {
+    type: 'Rate',
+    name: '评分',
+  },
   // {
   //   type: 'SingleEnum',
   //   name: '单选枚举',

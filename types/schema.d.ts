@@ -116,6 +116,7 @@ type SchemaFieldType =
   | 'Boolean'
   | 'DateTime'
   | 'Date'
+  | 'Rate'
   | 'File'
   | 'Image'
   | 'Audio'

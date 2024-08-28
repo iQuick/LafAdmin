@@ -72,7 +72,7 @@
     </n-grid-item>
   </n-grid> -->
 
-  <n-grid :x-gap="12" :cols="1" v-else-if="type === 'SingleSelect' || type === 'MultipleSelect'">
+  <n-grid :x-gap="12" :cols="1" v-else-if="['SingleSelect', 'MultipleSelect'].includes(type)">
     <n-grid-item disabled hidden>
       <n-form-item label="选项类型" path="selectType">
         <n-input v-model:value="formValue.isMultiple" />
@@ -85,11 +85,7 @@
     </n-grid-item>
   </n-grid>
 
-  <n-grid
-    :x-gap="12"
-    :cols="1"
-    v-else-if="type === 'Enum' || type === 'SingleEnum' || type === 'MultipleEnum'"
-  >
+  <n-grid :x-gap="12" :cols="1" v-else-if="['Enum', 'SingleEnum', 'MultipleEnum'].includes(type)">
     <n-grid-item>
       <n-grid :x-gap="12" :cols="2">
         <n-grid-item>

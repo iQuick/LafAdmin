@@ -42,6 +42,7 @@
     'Connect',
     'SingleSelect',
     'MultipleSelect',
+    'Enum',
   ];
   const hasDefaultValue = (type: SchemaFieldType | undefined) => {
     if (!type) return false;
@@ -214,6 +215,11 @@
           v-if="selectField?.type === 'Number'"
           v-model:value="formParams.defaultValue"
           placeholder="请输入默认值"
+        />
+        <n-rate
+          allow-half
+          v-if="selectField?.type === 'Rate'"
+          v-model:value="formParams.defaultValue"
         />
         <n-switch
           v-else-if="selectField?.type === 'Boolean'"
