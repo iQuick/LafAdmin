@@ -58,7 +58,7 @@
     }
   };
 
-  const getDefaultValue = (type: SchemaFieldType | undefined) => {
+  const getDefaultValue = (type: SchemaFieldType | undefined, multiple = false) => {
     switch (type) {
       case 'String':
       case 'MultiLineString':
@@ -80,6 +80,8 @@
         return [];
       case 'Connect':
         return null;
+      case 'Enum':
+        return null;
       default:
         return '';
     }
@@ -93,7 +95,7 @@
     isRequired: false,
     isHidden: false,
     isOrderField: false,
-    defaultValue: getDefaultValue(selectField.value?.type),
+    defaultValue: getDefaultValue(selectField.value?.type, selectField.value?.isMultiple),
   });
 
   const resetFormParams = () => {
@@ -107,7 +109,7 @@
     formParams.isRequired = false;
     formParams.isHidden = false;
     formParams.isOrderField = false;
-    formParams.defaultValue = getDefaultValue(selectField.value?.type);
+    formParams.defaultValue = getDefaultValue(selectField.value?.type, selectField.value?.c);
   };
 
   watch(

@@ -126,7 +126,7 @@
               {{ `最小长度${item.min}` }}
             </n-tag>
             <n-tag class="tag" v-if="item.defaultValue != undefined && item.defaultValue != null && item.defaultValue != ''" size="small" type="info">
-              {{ `默认值：${item.defaultValue}` }}
+              {{ `默认值：${item.type === 'Enum' ? item.defaultValue.map((_) => _.label) : item.defaultValue}` }}
             </n-tag>
             <n-tag class="tag" v-if="item.isRequired" size="small" type="info">
               {{ '必须项' }}
@@ -140,8 +140,8 @@
             <n-tag class="tag" v-if="item.isOrderField" size="small" type="info">
               {{ item.orderDirection === 'asc' ? '升序' : '降序' }}
             </n-tag>
-            <n-tag class="tag" v-if="item.enumElementSelect" size="small" type="info">
-              {{ item.enumElementSelect === 'single' ? '单选' : '多选' }}
+            <n-tag class="tag" v-if="item.isMultiple" size="small" type="info">
+              {{ item.isMultiple ? '多选' : '单选' }}
             </n-tag>
           </div>
         </div>

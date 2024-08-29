@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { toRefs } from 'vue';
+  import { ref, toRefs, watch } from 'vue';
   import { SelectOption } from 'naive-ui';
 
   const props = defineProps<{
@@ -16,6 +16,29 @@
   const { type, options } = toRefs(props);
   const { fieldAction, formValue, schemas } = options.value;
 
+  const enumSelectedDef = ref(null);
+  watch(enumSelectedDef, (vls) => {
+    if (vls && ['Enum', 'SingleEnum', 'MultipleEnum'].includes(type.value)) {
+      const data = formValue.enumElements.filter((_) => {
+        if (!_.value) {
+          return false;
+        }
+        if (Array.isArray(vls)) {
+          return vls.indexOf(_.value) !== -1;
+        } else {
+          return vls === _.value;
+        }
+      });
+      if (formValue.isMultiple) {
+        formValue.defaultValue = data;
+      } else {
+        if (data.length > 0) {
+          formValue.defaultValue = data[0];
+        }
+      }
+    }
+  });
+
   if (type.value === 'Date') {
     formValue.dateFormatType = 'timestamp-ms';
   }
@@ -31,6 +54,9 @@
         break;
       }
     }
+  };
+  const handleEnumSelectUpdate = (v) => {
+    console.debug(v);
   };
 </script>
 
@@ -73,6 +99,31 @@
   </n-grid> -->
 
   <n-grid :x-gap="12" :cols="1" v-else-if="['SingleSelect', 'MultipleSelect'].includes(type)">
+    <n-grid-item>
+      <n-form-item label="默认值" path="selectType">
+        <n-radio-group v-if="!formValue.isMultiple" v-model:value="formValue.defaultValue">
+          <n-space>
+            <n-radio
+              v-for="(value, key) in formValue.selectElements"
+              :key="key"
+              :value="value"
+              :label="value"
+            />
+          </n-space>
+        </n-radio-group>
+        <n-checkbox-group v-else v-model:value="formValue.defaultValue">
+          <n-space>
+            <n-checkbox
+              v-for="(value, key) in formValue.selectElements"
+              :key="key"
+              :value="value"
+              :label="value"
+            />
+          </n-space>
+        </n-checkbox-group>
+      </n-form-item>
+    </n-grid-item>
+
     <n-grid-item disabled hidden>
       <n-form-item label="选项类型" path="selectType">
         <n-input v-model:value="formValue.isMultiple" />
@@ -87,18 +138,28 @@
 
   <n-grid :x-gap="12" :cols="1" v-else-if="['Enum', 'SingleEnum', 'MultipleEnum'].includes(type)">
     <n-grid-item>
+      <n-form-item label="默认值" path="selectType">
+        <n-select
+          @updateValue="(v) => handleEnumSelectUpdate(v)"
+          v-model:value="enumSelectedDef"
+          :options="formValue.enumElements"
+          :multiple="formValue.isMultiple"
+        />
+      </n-form-item>
+    </n-grid-item>
+
+    <n-grid-item>
       <n-grid :x-gap="12" :cols="2">
         <n-grid-item>
           <n-form-item label="单选/多选" path="enumSelect">
             <n-select
-              v-model:value="formValue.enumElementSelect"
+              v-model:value="formValue.isMultiple"
               placeholder="请选择单选/多选"
               size="small"
               :disabled="fieldAction === 'edit'"
-              :default-value="formValue.isMultiple ? 'multiple' : 'single'"
               :options="[
-                { label: '单选', value: 'single' },
-                { label: '多选', value: 'multiple' },
+                { label: '单选', value: false },
+                { label: '多选', value: true },
               ]"
             />
           </n-form-item>
