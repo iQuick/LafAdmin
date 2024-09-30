@@ -21,7 +21,7 @@ export default async function (ctx: FunctionContext) {
         const v = ctx.query[field.name];
         if (k && v) {
           if (field.type === 'Boolean') {
-            params[k] = v === 'true';
+            params[k] = (v === 'true' || v == true);
           } else if (field.type === 'Number') {
             params[k] = parseInt(v);
           } else if (field.type === 'Enum') {
@@ -54,15 +54,19 @@ export default async function (ctx: FunctionContext) {
       dbc = dbc.orderBy(order, 'asc');
     }
 
-    const resData = await dbc.get();
     const resCount = await dbq.count();
     const totalPage = Math.ceil(resCount.total / count);
 
-    return call.page(resData.data, {
-      count: resCount.total,
-      cur: page,
-      total: totalPage,
-      hasNext: page < totalPage,
-    });
+    if (ctx.query['single-one']) {
+      return call.ok((await dbc.getOne()).data)
+    } else {
+      return call.page((await dbc.get()).data, {
+        count: resCount.total,
+        cur: page,
+        total: totalPage,
+        hasNext: page < totalPage,
+      });
+    }
+
   }
 }

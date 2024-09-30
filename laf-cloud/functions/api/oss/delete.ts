@@ -14,13 +14,16 @@ export default async function (ctx: FunctionContext) {
 
   db.collection('oss-manager').where({ key }).remove();
 
-  const bucket = `${cloud.appid}-public`;
-
-  const s3 = await createS3Default();
-  await s3.deleteObject({
-    Bucket: bucket,
-    Key: key,
-  });
+  try {
+    const bucket = `${cloud.appid}-public`;
+    const s3 = await createS3Default();
+    await s3.deleteObject({
+      Bucket: bucket,
+      Key: key,
+    });
+  } catch(e) {
+    console.log('Error oss delete :', e)
+  }
 
   return ok();
 }

@@ -1,5 +1,7 @@
 import cloud from '@lafjs/cloud'
 import { ok, fail } from '@/system/call'
+import { FAIL_CONTENT_UPDATE } '@/system/fail'
+import { connectSchemaRelation } from '@/system/db'
 
 const db = cloud.database();
 
@@ -23,6 +25,17 @@ export default async function (ctx: FunctionContext) {
       }
     }
   });
-  await db.collection(collection).doc(id).update(data);
-  return ok();
+
+  const result = await db.collection(collection).doc(id).update(data);
+  if (result.ok) {
+    const { data: schema } = await db.collection('schema').where({ collectionName: collection }).getOne();
+    return ok(
+      (await connectSchemaRelation(
+        schema,
+        db.collection(collection).where({ _id: id })
+      ).getOne()).data
+    );
+  } else {
+    return fail(FAIL_CONTENT_UPDATE)
+  }
 }

@@ -16,8 +16,9 @@ export const PARAMS_EMPTY_SITE_LOGO = {code:10015, msg:"网站Logo不能为空"}
 
 // 参数 - 账号
 export const ACCOUNT_PASSWD_EMPTY = { code: 10021, msg: '账号和密码不可为空' };
-export const ACCOUNT_PASSWD_INVALID = { code: 10022, msg: '账号或密码错误' };
-export const ACCOUNT_ALREADY_EXIST = { code: 10023, msg: '账号已存在' };
+export const ACCOUNT_NOT_EXIST = { code: 10022, msg: '账号不存在' };
+export const ACCOUNT_PASSWD_INVALID = { code: 10023, msg: '账号或密码错误' };
+export const ACCOUNT_ALREADY_EXIST = { code: 10024, msg: '账号已存在' };
 
 // 参数 - 密码
 export const PASSWD_OR_NEWPASSWD_EMPTY = { code: 10031, msg: '原密码或新密码不能为空' };
@@ -60,6 +61,11 @@ export const INVALID_EMAIL = { code: 12002, msg: '邮箱地址格式不正确' }
 export const FAIL_SCHEMA_CREATE = { code: 21001, msg: '创建失败' };
 export const FAIL_SCHEMA_DELETE = { code: 21002, msg: '删除失败' };
 export const FAIL_SCHEMA_UPDATE = { code: 21003, msg: '更新失败' };
+
+// content
+export const FAIL_CONTENT_CREATE = { code: 22001, msg: '创建失败' };
+export const FAIL_CONTENT_DELETE = { code: 22002, msg: '删除失败' };
+export const FAIL_CONTENT_UPDATE = { code: 22003, msg: '更新失败' };
 
 // 未知错误
 export const UNKNOWN = { code: 99999, msg: '未知错误' };

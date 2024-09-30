@@ -25,6 +25,7 @@
   });
 
   const handleClose = () => {
+    resetFormParams();
     emit('closeModal');
   };
 
@@ -63,6 +64,7 @@
       case 'String':
       case 'MultiLineString':
         return '';
+      case 'Rate':
       case 'Number':
         return 0;
       case 'Boolean':
@@ -209,7 +211,7 @@
         <n-input v-model:value="formParams.name" placeholder="请输入数据库字段名称" />
       </n-form-item>
       <n-form-item label="描述信息">
-        <n-input v-model="formParams.description" placeholder="请输入描述" />
+        <n-input v-model:value="formParams.description" placeholder="请输入描述" />
       </n-form-item>
 
       <n-form-item v-if="hasDefaultValue(selectField?.type)" label="默认值">

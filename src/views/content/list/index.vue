@@ -215,7 +215,11 @@
 
   const loadDataTable = async (params) => {
     const filters = {};
-    searches.value.forEach((item) => (filters[item.key] = item.value));
+    searches.value.forEach((item) => {
+      if (item.value) {
+        filters[item.key] = item.type.toLowerCase() === 'number' ? Number(item.value) : item.value;
+      }
+    });
     const ret = await getContents({
       schemaId,
       ...params,
@@ -311,6 +315,7 @@
               v-else
               class="search_input"
               v-model:value="item.value"
+              :type="'Number' === item.type ? 'number' : 'text'"
               :placeholder="`请输入${item.title}`"
             />
           </n-input-group>

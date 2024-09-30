@@ -16,13 +16,13 @@ call laf storage create public -p readonly
 echo "app push web"
 call laf storage push [appid]-admin ../web
 
-echo "设置 Web 托管"
+echo "set web hosting"
 call laf website create [appid]-admin
 
-echo "推送云函数"
+echo "push cloud function"
 call laf func push
 
-echo "初始化 app"
+echo "init app"
 call laf func exec __init__
 
-echo "完成"
+echo "complete"

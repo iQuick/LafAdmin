@@ -43,9 +43,27 @@
     formValue.dateFormatType = 'timestamp-ms';
   }
 
+  const handleEnumValueChange = (index, v) => {
+    if (formValue.enumElementType == 'number') {
+      formValue.enumElements[index].value = Number(v);
+    }
+  };
+  const handleEnumTypeChange = (v) => {
+    formValue.enumElements.forEach((it) => {
+      if (v == 'number') {
+        it.value = 0;
+      } else {
+        it.value = '';
+      }
+    });
+  };
   const handleAddEnumElement = () => {
     if (!formValue.enumElements) formValue.enumElements = [];
-    formValue.enumElements.push({ label: '', value: '' });
+    if (formValue.enumElementType == 'number') {
+      formValue.enumElements.push({ label: '', value: 0 });
+    } else {
+      formValue.enumElements.push({ label: '', value: '' });
+    }
   };
   const handleConnectCollection = (value: string, option: SelectOption) => {
     for (let schema of schemas) {
@@ -167,7 +185,9 @@
         <n-grid-item>
           <n-form-item label="枚举元素类型" path="enumType">
             <n-select
+              :disabled="fieldAction === 'edit'"
               v-model:value="formValue.enumElementType"
+              @change="handleEnumTypeChange"
               placeholder="请选择枚举元素类型"
               default-value="string"
               size="small"
@@ -187,12 +207,14 @@
           <n-input
             style="width: 40%; margin-right: 10px"
             v-model:value="el.label"
-            placeholder="枚举元素展示别名，如 已发布"
+            placeholder="枚举元素展示别名"
           />
           <n-input
             style="width: 40%; margin-right: 10px"
             v-model:value="el.value"
-            placeholder="枚举元素值，如 published"
+            @change="(v) => handleEnumValueChange(index, v)"
+            :type="formValue.enumElementType == 'number' ? 'number' : 'text'"
+            placeholder="枚举元素值"
           />
           <n-button type="error" @click="() => formValue.enumElements.splice(index, 1)">
             删除

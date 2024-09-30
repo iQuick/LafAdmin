@@ -106,7 +106,7 @@
         <n-input v-model:value="formParams.collectionName" placeholder="请输入数据库集合名称" />
       </n-form-item>
       <n-form-item label="描述信息">
-        <n-input v-model="formParams.description" placeholder="请输入描述" />
+        <n-input v-model:value="formParams.description" placeholder="请输入描述" />
       </n-form-item>
     </n-form>
     <template #action>

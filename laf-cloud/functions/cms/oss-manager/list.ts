@@ -23,6 +23,7 @@ export default async function (ctx: FunctionContext) {
   const skip = page === 0 ? 0 : page - 1;
   const r = await db
     .collection('oss-manager')
+    .orderBy('created_at', 'desc')
     .skip(skip * pageSize)
     .limit(pageSize)
     .get();

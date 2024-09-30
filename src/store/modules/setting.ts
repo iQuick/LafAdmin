@@ -3,7 +3,7 @@ import { store } from '@/store';
 import { getSetting, updateSetting } from '@/api/cms/system';
 import { logger } from '@/utils/Logger';
 
-export const useSystemSettingStore = defineStore('app-system-setting', {
+export const  useSystemSettingStore = defineStore('app-system-setting', {
   state: () => ({
     email: {
       emailAddr: '',

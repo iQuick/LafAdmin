@@ -2,7 +2,7 @@ import cloud from '@lafjs/cloud';
 import { hashPassword } from '@/system/sys';
 import { createAdminToken } from '@/system/token';
 import { ok, fail } from '@/system/call';
-import { ACCOUNT_PASSWD_INVALID, INVALID_ADMIN_ACCOUNT } from '@/system/fail';
+import { ACCOUNT_NOT_EXIST, ACCOUNT_PASSWD_INVALID, INVALID_ADMIN_ACCOUNT } from '@/system/fail';
 
 const db = cloud.database();
 
@@ -24,8 +24,11 @@ export async function main(ctx: FunctionContext) {
     .getOne();
 
   // check username and password
+  if (!admin) {
+    return fail(ACCOUNT_NOT_EXIST);
+  }
   const isMatchPassword = admin.password?.password === hashPassword(password);
-  if (!admin || !isMatchPassword) {
+  if (!isMatchPassword) {
     return fail(ACCOUNT_PASSWD_INVALID);
   }
 

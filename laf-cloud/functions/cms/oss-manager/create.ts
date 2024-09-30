@@ -24,6 +24,8 @@ export default async function (ctx: FunctionContext) {
     mimetype,
     url,
     finished,
+    created_at: Date.now(),
+    updated_at: Date.now(),
   });
   return ok(data);
 }

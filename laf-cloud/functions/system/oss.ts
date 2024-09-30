@@ -46,5 +46,5 @@ export async function createS3(sts): S3 {
 }
 
 export async function createS3Default(): S3 {
-  return createS3(getSts());
+  return createS3(await getSts());
 }

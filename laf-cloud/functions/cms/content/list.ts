@@ -54,7 +54,11 @@ export async function main(ctx: FunctionContext) {
     if (va) {
       try {
         const field = findSchemaField(schema, key)
-        if (field && field.type === 'Enum') {
+        if (field.type === 'Boolean') {
+          where[key] = (va === 'true' || va == true);
+        } else if (field.type === 'Number') {
+          where[key] = parseInt(va);
+        } else if (field && field.type === 'Enum') {
           where[key] = { value: (field.enumElementType === 'number' ? parseInt(va) : va) };;
         } else {
           where[key] = new RegExp(`${va}`);

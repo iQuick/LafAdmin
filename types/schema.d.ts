@@ -76,7 +76,7 @@ interface SchemaField {
   // 枚举元素的类型
   enumElementType: 'string' | 'number';
   // 所有枚举元素
-  enumElements: { label: string; value: string }[];
+  enumElements: { label: string; value: string | number }[];
 
   selectElements: string[];
 

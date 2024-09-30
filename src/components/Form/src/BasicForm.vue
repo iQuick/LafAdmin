@@ -140,6 +140,7 @@
           <!--NRate-->
           <template v-else-if="schema.component === 'NRate'">
             <n-rate
+              allow-half
               v-model:value="formModel[schema.field]"
               :class="{ isFull: schema.isFull != false && getProps.isFull }"
             />
@@ -423,6 +424,7 @@
           if (schema.componentProps?.multiple) {
             (schema.defaultValue as []).forEach((url) => {
               uploadFileList[schema.field].push({
+                id: url,
                 name: url,
                 url: url,
                 thumbnailUrl: url,
@@ -431,6 +433,7 @@
             });
           } else {
             uploadFileList[schema.field].push({
+              id: schema.defaultValue,
               name: schema.defaultValue,
               url: schema.defaultValue,
               thumbnailUrl: schema.defaultValue,
@@ -473,7 +476,7 @@
       };
       const handleEnumSelectUpdate = (schema, value) => {
         const values = schema.componentProps?.options.filter((_) => {
-          return value.indexOf(_.value) !== -1;
+          return value.toString().indexOf(_.value.toString()) !== -1;
         });
         if (schema.componentProps?.multiple) {
           formModel[schema.field] = values;

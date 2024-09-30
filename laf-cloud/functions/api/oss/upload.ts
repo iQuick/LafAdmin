@@ -25,13 +25,15 @@ export default async function (ctx: FunctionContext) {
         key = path.join(dir, key);
       }
       const url = `${endpoint}/${bucket}/${key}`;
-      await db.collection('oss-manager').add({
+      const rsp = await db.collection('oss-manager').add({
         key: key,
         filename: file.filename,
         originalname: file.originalname,
         mimetype: file.mimetype,
         url: url,
         finished: false,
+        created_at: Date.now(),
+        updated_at: Date.now(),
       });
       const stream = fs.createReadStream(file.path);
       await s3.putObject({
@@ -40,9 +42,9 @@ export default async function (ctx: FunctionContext) {
         Body: stream,
         ContentType: file.mimetype,
       });
-      await db.collection('oss-manager').update({
-        key: key,
+      await db.collection('oss-manager').doc(rsp.id).update({
         finished: true,
+        updated_at: Date.now(),
       });
       data.push({ key, url });
     }

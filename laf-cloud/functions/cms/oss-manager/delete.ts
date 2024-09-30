@@ -1,4 +1,5 @@
 import cloud from '@lafjs/cloud';
+import { createS3Default } from '@/system/oss';
 import { ok, fail } from '@/system/call';
 import { checkToken, checkPermission } from '@/system/sys';
 import { INVALID_COLLECTION, PARAMS_EMPTY } from '@/system/fail';
@@ -28,6 +29,19 @@ export default async function (ctx: FunctionContext) {
   if (!file) {
     return fail(INVALID_COLLECTION);
   }
+
+
+  try {
+    const bucket = `${cloud.appid}-public`;
+    const s3 = await createS3Default();
+    await s3.deleteObject({
+      Bucket: bucket,
+      Key: file.key,
+    });
+  } catch (e) {
+    console.log('Error oss delete :', e)
+  }
+
 
   // delete
   const r = await db.collection('oss-manager').doc(_id).remove();
